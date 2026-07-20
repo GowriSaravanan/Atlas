@@ -1,0 +1,36 @@
+[project]
+name = "adaptive-rag"
+version = "0.1.0"
+description = "Production-quality Adaptive Hybrid RAG Platform with LangGraph orchestration"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.139.2",
+    "httpx>=0.28.1",
+    "langchain-core>=1.4.9",
+    "langgraph>=1.2.9",
+    "pydantic>=2.13.4",
+    "pydantic-settings>=2.14.2",
+    "uvicorn[standard]>=0.51.0",
+]
+
+[project.scripts]
+adaptive-rag = "adaptive_rag.main:main"
+
+[build-system]
+requires = ["uv_build>=0.11.29,<0.12.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+    "pytest-asyncio>=1.4.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+asyncio_mode = "auto"
+
+[tool.uv]
+package = true
