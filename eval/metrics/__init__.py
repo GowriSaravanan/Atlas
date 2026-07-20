@@ -1,5 +1,6 @@
 """Evaluation metric helpers."""
 
+from eval.metrics.answer import evaluate_answer_case, summarize_answer
 from eval.metrics.confidence import evaluate_confidence_case, summarize_confidence
 from eval.metrics.decomposition import evaluate_decomposition_case, summarize_decomposition
 from eval.metrics.failure import evaluate_failure_case, summarize_failure
@@ -12,6 +13,7 @@ from eval.metrics.routing import evaluate_routing_case, summarize_routing
 
 __all__ = [
     "build_summary_report",
+    "evaluate_answer_case",
     "evaluate_confidence_case",
     "evaluate_decomposition_case",
     "evaluate_failure_case",
@@ -19,6 +21,7 @@ __all__ = [
     "evaluate_retrieval_case",
     "evaluate_rewrite_case",
     "evaluate_routing_case",
+    "summarize_answer",
     "summarize_confidence",
     "summarize_decomposition",
     "summarize_failure",

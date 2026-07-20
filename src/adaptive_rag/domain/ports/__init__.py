@@ -1,5 +1,6 @@
 """Port interfaces for external adapters."""
 
+from adaptive_rag.domain.ports.answer_generator import AnswerGeneratorPort
 from adaptive_rag.domain.ports.chunker import ChunkerPort
 from adaptive_rag.domain.ports.document_loader import DocumentLoaderPort
 from adaptive_rag.domain.ports.embedder import EmbedderPort
@@ -17,6 +18,7 @@ from adaptive_rag.domain.ports.vector_store import VectorStorePort
 from adaptive_rag.domain.ports.vector_store_factory import VectorStoreFactoryPort
 
 __all__ = [
+    "AnswerGeneratorPort",
     "ChunkerPort",
     "DocumentLoaderPort",
     "EmbedderPort",

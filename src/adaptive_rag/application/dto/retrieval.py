@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field
 
 from adaptive_rag.domain.models.conversation import Message
 from adaptive_rag.domain.models.confidence import ConfidenceScore
+from adaptive_rag.domain.models.answer import GeneratedAnswer
 from adaptive_rag.domain.models.decomposition import DecompositionResult, SubQueryResult
 from adaptive_rag.domain.models.query import (
     OriginalQueryAnalysis,
@@ -57,6 +58,7 @@ class RetrievalEngineResult(HybridRetrievalResult):
     subquery_results: list[SubQueryResult] = Field(default_factory=list)
     decision: RetrievalDecision | None = None
     confidence: ConfidenceScore | None = None
+    generated_answer: GeneratedAnswer | None = None
 
     @property
     def analysis(self) -> ResolvedQueryAnalysis | None:

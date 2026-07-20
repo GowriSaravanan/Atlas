@@ -43,6 +43,7 @@ def build_summary_report(sections: dict[str, Any]) -> dict[str, Any]:
         "failure_cases_evaluated": "failure" in sections,
         "confidence_evaluated": "confidence" in sections,
         "rerank_lift_measured": "rerank" in sections,
+        "answer_generation_measured": "answer_generation" in sections,
     }
     quality_gates = _quality_gates(sections)
     return {

@@ -49,6 +49,7 @@ indices/
 uploads/
 *.faiss
 eval/reports/**/data/
+eval/reports/latest-run/
 
 # OS
 .DS_Store

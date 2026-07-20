@@ -20,7 +20,9 @@ from adaptive_rag.domain.policies.document_metadata_extractor import DocumentMet
 from adaptive_rag.domain.ports.embedder import EmbedderPort
 
 if TYPE_CHECKING:
+    from adaptive_rag.domain.ports.answer_generator import AnswerGeneratorPort
     from adaptive_rag.domain.ports.index_registry import IndexRegistryPort
+    from adaptive_rag.domain.ports.llm import LLMPort
     from adaptive_rag.domain.ports.reranker import RerankerPort
 
 
@@ -32,6 +34,10 @@ def _use_fake_reranker() -> bool:
     return os.getenv("ADAPTIVE_RAG_FAKE_RERANKER", "").lower() in {"1", "true", "yes"}
 
 
+def _use_fake_llm() -> bool:
+    return os.getenv("ADAPTIVE_RAG_FAKE_LLM", "").lower() in {"1", "true", "yes"}
+
+
 @dataclass
 class Container:
     """Application dependency container — wires use cases and ports."""
@@ -40,6 +46,8 @@ class Container:
 
     _embedder: EmbedderPort | None = field(default=None, repr=False)
     _reranker: RerankerPort | None = field(default=None, repr=False)
+    _llm: LLMPort | None = field(default=None, repr=False)
+    _answer_generator: AnswerGeneratorPort | None = field(default=None, repr=False)
     _index_registry: IndexRegistryPort | None = field(default=None, repr=False)
     _ingest_context: IngestNodeContext | None = field(default=None, repr=False)
 
@@ -93,6 +101,37 @@ class Container:
 
                 self._reranker = CrossEncoderReranker(self.settings.reranker)
         return self._reranker
+
+    @property
+    def llm(self) -> LLMPort:
+        if self._llm is None:
+            from adaptive_rag.infrastructure.llm import build_llm
+
+            self._llm = build_llm(self.settings.llm)
+        return self._llm
+
+    @property
+    def answer_generator(self) -> AnswerGeneratorPort:
+        if self._answer_generator is None:
+            from adaptive_rag.domain.policies.context_builder import ContextBuilder
+            from adaptive_rag.domain.policies.prompt_builder import PromptBuilder
+            from adaptive_rag.infrastructure.llm.fake_answer_generator import FakeAnswerGenerator
+            from adaptive_rag.infrastructure.llm.llm_answer_generator import LLMAnswerGenerator
+
+            context_builder = ContextBuilder(self.settings.answer_generation)
+            prompt_builder = PromptBuilder(self.settings.answer_generation)
+            if _use_fake_llm():
+                self._answer_generator = FakeAnswerGenerator(
+                    context_builder=context_builder,
+                    prompt_builder=prompt_builder,
+                )
+            else:
+                self._answer_generator = LLMAnswerGenerator(
+                    llm=self.llm,
+                    context_builder=context_builder,
+                    prompt_builder=prompt_builder,
+                )
+        return self._answer_generator
 
     @property
     def index_registry(self) -> IndexRegistryPort:
@@ -174,6 +213,7 @@ class Container:
                 settings=self.settings.retrieval,
                 fusion_engine=fusion_engine,
                 reranker=self.reranker,
+                answer_generator=self.answer_generator,
             )
         return self._retrieval_engine
 

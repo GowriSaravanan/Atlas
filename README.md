@@ -69,6 +69,49 @@ Resolved Analysis → Decompose → for each SubQuery: analyze → route → ret
 - **`TopKAllocator`** — weighted budget (LOOKUP=3, FACTUAL=5, SEMANTIC=7)
 - **Sequential retrieval only** — no parallel execution in v1
 
+## Phase 5A — Cross-Encoder Reranking
+
+Post-merge reranking before confidence scoring and answer generation.
+
+### Pipeline
+
+```
+… → Merge (RRF) → CrossEncoderReranker → ConfidenceScorer → …
+```
+
+### Features
+
+- **`RerankerPort`** with `CrossEncoderReranker` (Sentence Transformers) and `FakeReranker` for tests
+- Rerank step in `RetrievalTrace` with before/after chunk IDs and latency
+- Dedicated `rerank` eval suite (Recall@k/MRR before vs after)
+
+## Phase 5B — Evidence-Grounded Answer Generation
+
+Answer generation on top of the frozen retrieval pipeline.
+
+### Pipeline
+
+```
+Query → Analyze → [Rewrite] → Decompose → Retrieve → Merge → Rerank
+     → Confidence → ContextBuilder → AnswerGenerator → GeneratedAnswer
+```
+
+### Features
+
+- **`AnswerGeneratorPort`** with `LLMAnswerGenerator` (configurable LLM providers) and `FakeAnswerGenerator` for tests
+- **`ContextBuilder`** — selects reranked chunks, preserves metadata, enforces token budget
+- **`PromptBuilder`** — loads external templates from `prompts/system.txt` and `prompts/answer_generation.txt`
+- **`GeneratedAnswer`** — structured output with `used_chunk_ids`, token counts, and latency
+- Dedicated `answer_generation` eval suite (generation success, groundedness, latency, tokens)
+
+### Version roadmap
+
+| Tag | Milestone |
+|---|---|
+| `v1.0.0-adaptive-retrieval` | Retrieval v1.0 freeze — routing, rewrite, decomposition, hybrid retrieval, eval baseline |
+| `v1.2.0-answer-generation` | Phase 5A reranking + Phase 5B answer generation |
+| *upcoming* | Phase 5C — citation formatting and evidence attribution |
+
 ## Evaluation Framework
 
 Retrieval features are **frozen** until benchmarks pass. See [docs/evaluation.md](docs/evaluation.md).
@@ -78,7 +121,29 @@ uv run python eval/run_eval.py
 uv run python eval/run_eval.py --suite golden
 ```
 
-Stage-specific datasets cover rewrite, routing, decomposition, retrieval, confidence, failure cases, and a 10-query golden demo for interviews.
+Stage-specific datasets cover rewrite, routing, decomposition, retrieval, rerank, answer generation, confidence, failure cases, and a golden demo for interviews.
+
+### Architecture (v1.2)
+
+```
+┌─────────┐    ┌──────────────┐    ┌─────────────┐    ┌──────────────┐
+│  Query  │───▶│ QueryAnalyzer│───▶│QueryRewriter│───▶│ Decomposer   │
+└─────────┘    └──────────────┘    └─────────────┘    └──────┬───────┘
+                                                               │
+       ┌───────────────────────────────────────────────────────┘
+       ▼
+┌──────────────┐    ┌─────────────┐    ┌──────────────┐    ┌─────────────┐
+│HybridRetrieve│───▶│ Merge (RRF) │───▶│  Reranker   │───▶│ Confidence  │
+└──────────────┘    └─────────────┘    └──────────────┘    └──────┬──────┘
+                                                                    │
+       ┌────────────────────────────────────────────────────────────┘
+       ▼
+┌────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+│ ContextBuilder │───▶│ AnswerGenerator  │───▶│ GeneratedAnswer │
+└────────────────┘    └──────────────────┘    └─────────────────┘
+```
+
+See [docs/architecture.md](docs/architecture.md) for layer details, ADRs, and known limitations.
 
 ## Quick Start
 
@@ -95,7 +160,7 @@ uv run adaptive-rag
 - `POST /api/v1/ingest` — ingest from local file path
 - `POST /api/v1/ingest/upload` — upload PDF for ingestion
 - `GET /api/v1/collections/{collection_id}/stats` — index statistics
-- `POST /api/v1/retrieve` — hybrid retrieval (BM25 / dense / hybrid)
+- `POST /api/v1/retrieve` — adaptive retrieval + reranking + answer generation
 
 ### Retrieve example
 
@@ -126,6 +191,10 @@ Copy `.env.example` to `.env`. Key settings:
 - `STORAGE__INDEX_DIR`, `STORAGE__UPLOAD_DIR`
 - `EMBEDDING__MODEL_NAME`
 - `ADAPTIVE_RAG_FAKE_EMBEDDER=1` — use deterministic fake embedder (tests)
+- `ADAPTIVE_RAG_FAKE_RERANKER=1` — passthrough reranker for tests/eval
+- `ADAPTIVE_RAG_FAKE_LLM=1` — deterministic answer generator for tests/eval
+- `ANSWER_GENERATION__MAX_CONTEXT_TOKENS` — context window budget for answer prompts
+- `LLM__PROVIDER`, `LLM__MODEL` — answer generation LLM (production)
 
 ## Architecture Notes
 

@@ -19,6 +19,7 @@ if str(ROOT) not in sys.path:
 
 from eval.fixtures.catalog import build_chunk_catalog
 from eval.fixtures.corpus import EVAL_COLLECTION_ID, build_eval_corpus_pdf
+from eval.metrics.answer import evaluate_answer_case, summarize_answer
 from eval.metrics.confidence import evaluate_confidence_case, summarize_confidence
 from eval.metrics.decomposition import evaluate_decomposition_case, summarize_decomposition
 from eval.metrics.failure import evaluate_failure_case, summarize_failure
@@ -57,6 +58,7 @@ def configure_eval_environment(output_dir: Path) -> None:
     """Configure isolated storage and fake embedder for reproducible eval."""
     os.environ["ADAPTIVE_RAG_FAKE_EMBEDDER"] = "1"
     os.environ["ADAPTIVE_RAG_FAKE_RERANKER"] = "1"
+    os.environ["ADAPTIVE_RAG_FAKE_LLM"] = "1"
     os.environ["STORAGE__DATA_DIR"] = str(output_dir / "data")
     os.environ["STORAGE__INDEX_DIR"] = str(output_dir / "data" / "indices")
     os.environ["STORAGE__UPLOAD_DIR"] = str(output_dir / "data" / "uploads")
@@ -222,6 +224,31 @@ class EvaluationRunner:
             )
         return {"cases": cases, "summary": summarize_rerank(cases)}
 
+    def run_answer_generation_eval(self) -> dict[str, Any]:
+        cases = []
+        for row in load_jsonl(DATASETS_DIR / "answer_generation_dataset.jsonl"):
+            top_k = row.get("top_k", 5)
+            result = self.container.hybrid_retrieval_use_case.execute(
+                query=row["query"],
+                collection_id=self.collection_id,
+                top_k=top_k,
+            )
+            self.latency_traces.append(trace_payload(result))
+            generated = result.generated_answer
+            cases.append(
+                evaluate_answer_case(
+                    case_id=row["id"],
+                    answer=generated.answer if generated else "",
+                    used_chunk_ids=generated.used_chunk_ids if generated else [],
+                    expected_terms=row.get("expected_terms", []),
+                    min_chunks_used=row.get("min_chunks_used", 1),
+                    latency_ms=generated.latency_ms if generated else 0.0,
+                    prompt_tokens=generated.prompt_tokens if generated else 0,
+                    completion_tokens=generated.completion_tokens if generated else 0,
+                )
+            )
+        return {"cases": cases, "summary": summarize_answer(cases)}
+
     def run_confidence_eval(self) -> dict[str, Any]:
         cases = []
         for row in load_jsonl(DATASETS_DIR / "confidence_dataset.jsonl"):
@@ -327,6 +354,7 @@ class EvaluationRunner:
             "decomposition": self.run_decomposition_eval(),
             "retrieval": self.run_retrieval_eval(),
             "rerank": self.run_rerank_eval(),
+            "answer_generation": self.run_answer_generation_eval(),
             "confidence": self.run_confidence_eval(),
             "failure": self.run_failure_eval(),
             "golden_demo": self.run_golden_demo(),
@@ -392,6 +420,20 @@ def write_report(report: dict[str, Any], output_path: Path) -> None:
                 "",
             ]
         )
+    if "answer_generation" in sections:
+        summary = sections["answer_generation"]["summary"]
+        lines.extend(
+            [
+                "## Answer Generation",
+                "",
+                f"- Generation success rate: {summary.get('generation_success_rate')}",
+                f"- Groundedness rate: {summary.get('groundedness_rate')}",
+                f"- Avg latency: {summary.get('avg_latency_ms')}ms",
+                f"- Avg prompt tokens: {summary.get('avg_prompt_tokens')}",
+                f"- Avg completion tokens: {summary.get('avg_completion_tokens')}",
+                "",
+            ]
+        )
     if "rewrite" in sections:
         summary = sections["rewrite"]["summary"]
         lines.extend(
@@ -439,7 +481,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Run Adaptive Retrieval Platform evaluation benchmarks.")
     parser.add_argument(
         "--suite",
-        choices=["all", "rewrite", "routing", "decomposition", "retrieval", "rerank", "confidence", "failure", "golden", "latency"],
+        choices=["all", "rewrite", "routing", "decomposition", "retrieval", "rerank", "answer_generation", "confidence", "failure", "golden", "latency"],
         default="all",
     )
     parser.add_argument(
@@ -467,6 +509,7 @@ def main() -> int:
             "decomposition": "run_decomposition_eval",
             "retrieval": "run_retrieval_eval",
             "rerank": "run_rerank_eval",
+            "answer_generation": "run_answer_generation_eval",
             "confidence": "run_confidence_eval",
             "failure": "run_failure_eval",
             "golden": "run_golden_demo",

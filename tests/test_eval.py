@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+from eval.metrics.answer import evaluate_answer_case, summarize_answer
 from eval.metrics.decomposition import evaluate_decomposition_case, summarize_decomposition
 from eval.metrics.latency import summarize_latency
 from eval.metrics.rerank import evaluate_rerank_case, summarize_rerank
@@ -135,6 +136,24 @@ def test_rerank_summary() -> None:
     assert summary["avg_rerank_ms"] == 15.0
 
 
+def test_answer_generation_metrics() -> None:
+    case = evaluate_answer_case(
+        case_id="AG001",
+        answer="Employees may take up to 10 sick leave days per year.",
+        used_chunk_ids=["c1"],
+        expected_terms=["10", "sick"],
+        min_chunks_used=1,
+        latency_ms=25.0,
+        prompt_tokens=120,
+        completion_tokens=18,
+    )
+    summary = summarize_answer([case])
+    assert case["generated"] is True
+    assert case["grounded"] is True
+    assert summary["generation_success_rate"] == 1.0
+    assert summary["groundedness_rate"] == 1.0
+
+
 def test_retrieval_case_uses_catalog() -> None:
     catalog = [
         ("c1", "Policy HR-203 grants annual leave", {"section_title": "Policy HR-203: Annual Leave"}),
@@ -162,6 +181,7 @@ def test_dataset_files_exist() -> None:
         "decomposition_dataset.jsonl",
         "confidence_dataset.jsonl",
         "failure_dataset.jsonl",
+        "answer_generation_dataset.jsonl",
         "golden_demo.jsonl",
     ]
     for name in expected:

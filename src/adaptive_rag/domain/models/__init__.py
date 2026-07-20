@@ -1,5 +1,6 @@
 """Domain models public API."""
 
+from adaptive_rag.domain.models.answer import BuiltContext, GeneratedAnswer
 from adaptive_rag.domain.models.confidence import ConfidenceBreakdown, ConfidenceScore
 from adaptive_rag.domain.models.conversation import Message, MessageRole
 from adaptive_rag.domain.models.decomposition import (
@@ -55,6 +56,7 @@ from adaptive_rag.domain.models.trace import RetrievalTrace, StepTrace
 
 __all__ = [
     "AnswerMode",
+    "BuiltContext",
     "Chunk",
     "Citation",
     "CitationReport",
@@ -68,6 +70,7 @@ __all__ = [
     "DecompositionResult",
     "Document",
     "FilterStrategy",
+    "GeneratedAnswer",
     "GroundingReport",
     "GuardDecision",
     "GuardResult",

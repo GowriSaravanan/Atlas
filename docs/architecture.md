@@ -69,6 +69,8 @@ sequenceDiagram
     participant Scope as MetadataScopeBuilder
     participant Retriever as HybridRetriever
     participant Reranker as RerankerPort
+    participant Context as ContextBuilder
+    participant Generator as AnswerGeneratorPort
     participant Confidence as ConfidenceScorer
     participant Index as IndexRegistryPort
 
@@ -94,6 +96,10 @@ sequenceDiagram
     Reranker-->>Engine: reranked ScoredChunks
     Engine->>Confidence: score(reranked_results, analysis)
     Confidence-->>Engine: ConfidenceScore
+    Engine->>Context: build(reranked_results)
+    Context-->>Engine: context block
+    Engine->>Generator: generate(query, evidence)
+    Generator-->>Engine: GeneratedAnswer
     Engine-->>API: RetrievalEngineResult
     API-->>Client: JSON + trace
 ```
@@ -147,7 +153,8 @@ src/adaptive_rag/
 | **4A** | ✅ | Query rewriting (conditional) |
 | **4B** | ✅ | Query decomposition (conservative, sequential retrieval) |
 | **5A** | ✅ | Cross-encoder reranking (`RerankerPort`, post-merge, pre-confidence) |
-| **5B** | 🔜 | Answer generation, citations |
+| **5B** | ✅ | Evidence-grounded answer generation (`AnswerGeneratorPort`, prompt templates) |
+| **5C** | 🔜 | Citation formatting and verification |
 | **6** | 🔜 | Hallucination guard, grounding validation |
 | **7** | 🔜 | RAGAS evaluation, LLM-as-Judge, observability |
 | **8** | 🔜 | Explainability dashboard, Docker deployment |
@@ -334,6 +341,63 @@ ADAPTIVE_RAG_FAKE_RERANKER=1  # tests/eval only — preserves v1.0 retrieval gat
 ```
 
 Eval adds a dedicated `rerank` suite measuring Recall@k/MRR before vs after reranking and rerank latency, without modifying existing retrieval datasets.
+
+---
+
+## Phase 5B — Evidence-Grounded Answer Generation
+
+Answer generation runs **after reranking and confidence scoring**, using reranked evidence only.
+
+```mermaid
+flowchart LR
+    Rerank["CrossEncoderReranker"] --> Context["ContextBuilder"]
+    Context --> Prompt["PromptBuilder"]
+    Prompt --> LLM["LLMAnswerGenerator"]
+    LLM --> Answer["GeneratedAnswer"]
+```
+
+| Component | Location | Role |
+|---|---|---|
+| `AnswerGeneratorPort` | `domain/ports/answer_generator.py` | Answer generation contract |
+| `ContextBuilder` | `domain/policies/context_builder.py` | Select/order/truncate evidence |
+| `PromptBuilder` | `domain/policies/prompt_builder.py` | Load `prompts/*.txt` templates |
+| `LLMAnswerGenerator` | `infrastructure/llm/llm_answer_generator.py` | Production adapter |
+| `FakeAnswerGenerator` | `infrastructure/llm/fake_answer_generator.py` | Test/eval passthrough |
+| `GeneratedAnswer` | `domain/models/answer.py` | Provider-agnostic answer metadata |
+
+Prompt templates live outside Python:
+
+```
+prompts/
+  system.txt
+  answer_generation.txt
+```
+
+Configuration:
+
+```bash
+ANSWER_GENERATION__MAX_CONTEXT_TOKENS=2048
+ANSWER_GENERATION__PROMPTS_DIR=prompts
+ADAPTIVE_RAG_FAKE_LLM=1  # tests/eval only
+LLM__PROVIDER=ollama
+LLM__MODEL=llama3
+```
+
+Eval adds an `answer_generation` suite measuring generation success, basic groundedness, latency, and token usage.
+
+#### ContextBuilder token budget (known limitation)
+
+`ContextBuilder` enforces `ANSWER_GENERATION__MAX_CONTEXT_TOKENS` using a **word-count heuristic**, not a model tokenizer:
+
+| Question | Current behavior |
+|---|---|
+| Token vs character count? | **Heuristic token estimate** via `estimate_token_count()` — `int(word_count × 1.3)`, not characters or a real tokenizer |
+| Whole chunks preserved? | **Yes, by default.** Chunks are included whole in rerank order until the budget is exceeded; the next chunk is dropped entirely |
+| Single oversized chunk? | If the first chunk alone exceeds the budget, its text is **word-truncated** (not mid-token) with a `...` suffix |
+| Prioritization | Chunks are ordered by **rerank rank** (lowest rank first); higher-ranked evidence is kept, lower-ranked evidence is dropped |
+| Tokenizer used | **None.** Same heuristic as adaptive chunking (`domain/policies/token_utils.py`) |
+
+This is acceptable for v1.2 but may under- or over-estimate context for specific LLMs. **Planned improvement (Phase 7+):** replace the heuristic with provider/model-specific token counting before prompt assembly.
 
 ---
 

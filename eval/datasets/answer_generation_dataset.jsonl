@@ -1,0 +1,10 @@
+{"id": "AG001", "query": "How many sick leave days are allowed?", "expected_terms": ["10", "sick"], "min_chunks_used": 1}
+{"id": "AG002", "query": "What is HR-203?", "expected_terms": ["20", "annual"], "min_chunks_used": 1}
+{"id": "AG003", "query": "Explain employee maternity leave benefits", "expected_terms": ["26", "maternity"], "min_chunks_used": 1}
+{"id": "AG004", "query": "paternity leave weeks", "expected_terms": ["2", "paternity"], "min_chunks_used": 1}
+{"id": "AG005", "query": "annual leave 20 days HR department", "expected_terms": ["20", "annual"], "min_chunks_used": 1}
+{"id": "AG006", "query": "Policy HR-105 sick days", "expected_terms": ["10", "sick"], "min_chunks_used": 1}
+{"id": "AG007", "query": "HR leave policy handbook summary", "expected_terms": ["handbook", "leave"], "min_chunks_used": 1}
+{"id": "AG008", "query": "paid maternity leave weeks", "expected_terms": ["26", "paid"], "min_chunks_used": 1}
+{"id": "AG009", "query": "paid paternity leave weeks", "expected_terms": ["2", "paid"], "min_chunks_used": 1}
+{"id": "AG010", "query": "manager approval sick leave", "expected_terms": ["manager", "sick"], "min_chunks_used": 1}

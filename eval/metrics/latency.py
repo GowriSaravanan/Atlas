@@ -13,6 +13,7 @@ STAGE_ALIASES = {
     "adaptive_routing": "routing",
     "subquery_merge": "merge",
     "rerank": "rerank",
+    "answer_generation": "answer_generation",
     "confidence_scoring": "confidence",
     "dense_retrieval": "retrieval",
     "sparse_retrieval": "retrieval",

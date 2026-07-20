@@ -1,0 +1,9 @@
+Use the evidence below to answer the question.
+
+Question:
+{query}
+
+Evidence:
+{context}
+
+Answer:

@@ -37,6 +37,7 @@ from adaptive_rag.domain.ports.index_registry import IndexRegistryPort
 from adaptive_rag.domain.ports.query_decomposer import QueryDecomposerPort
 from adaptive_rag.domain.ports.query_rewriter import QueryRewriterPort
 from adaptive_rag.domain.ports.reranker import RerankerPort
+from adaptive_rag.domain.ports.answer_generator import AnswerGeneratorPort
 from adaptive_rag.observability.logging import get_logger
 
 logger = get_logger(__name__)
@@ -61,6 +62,7 @@ class RetrievalEngine:
         top_k_allocator: TopKAllocator | None = None,
         result_merger: SubqueryResultMerger | None = None,
         reranker: RerankerPort | None = None,
+        answer_generator: AnswerGeneratorPort | None = None,
     ) -> None:
         self._index_registry = index_registry
         self._hybrid_retriever = hybrid_retriever
@@ -74,6 +76,7 @@ class RetrievalEngine:
         self._top_k_allocator = top_k_allocator or TopKAllocator()
         self._result_merger = result_merger or SubqueryResultMerger(fusion_engine)
         self._reranker = reranker
+        self._answer_generator = answer_generator
 
     def execute(
         self,
@@ -215,6 +218,27 @@ class RetrievalEngine:
             rerank_metadata=rerank_metadata,
         )
 
+        generated_answer = None
+        answer_ms = 0.0
+        if self._answer_generator is not None:
+            start = time.perf_counter()
+            generated_answer = self._answer_generator.generate(retrieval_query, merged_results)
+            answer_ms = (time.perf_counter() - start) * 1000
+            trace.steps.append(
+                StepTrace(
+                    step="answer_generation",
+                    duration_ms=answer_ms,
+                    metadata={
+                        "model_name": generated_answer.model_name,
+                        "used_chunk_ids": generated_answer.used_chunk_ids,
+                        "prompt_tokens": generated_answer.prompt_tokens,
+                        "completion_tokens": generated_answer.completion_tokens,
+                        "answer_length": len(generated_answer.answer),
+                    },
+                )
+            )
+            trace.latency_ms["answer_generation_ms"] = answer_ms
+
         logger.info(
             "Retrieval engine completed",
             extra={
@@ -244,6 +268,7 @@ class RetrievalEngine:
             retrieval_overlap=retrieval_overlap,
             decision=decision,
             confidence=confidence,
+            generated_answer=generated_answer,
             trace=trace,
         )
 

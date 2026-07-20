@@ -38,6 +38,13 @@ class ConfidenceWeightSettings(BaseSettings):
     evidence_density: float = 0.15
 
 
+class AnswerGenerationSettings(BaseSettings):
+    """Answer generation configuration."""
+
+    max_context_tokens: int = Field(default=2048, ge=256, le=16384)
+    prompts_dir: str = "prompts"
+
+
 class LLMSettings(BaseSettings):
     """LLM provider configuration."""
 
@@ -128,6 +135,7 @@ class Settings(BaseSettings):
     vector_store: VectorStoreSettings = Field(default_factory=VectorStoreSettings)
     sparse_index: SparseIndexSettings = Field(default_factory=SparseIndexSettings)
     reranker: RerankerSettings = Field(default_factory=RerankerSettings)
+    answer_generation: AnswerGenerationSettings = Field(default_factory=AnswerGenerationSettings)
     storage: StorageSettings = Field(default_factory=StorageSettings)
     logging: LoggingSettings = Field(default_factory=LoggingSettings)
 
