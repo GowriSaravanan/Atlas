@@ -1,259 +1,661 @@
-# Adaptive Hybrid RAG Platform
+<div align="center">
 
-Production-quality portfolio project demonstrating enterprise AI engineering with clean architecture, LangGraph orchestration, and hybrid retrieval.
+# Atlas
 
-## Phase 1 — Ingestion Pipeline
+### Adaptive Hybrid Retrieval-Augmented Generation Platform
 
-Phase 1 implements intelligent PDF ingestion, adaptive chunking, metadata extraction, and hybrid indexing (FAISS + BM25).
+*A production-inspired AI engineering project demonstrating adaptive retrieval, Clean Architecture, and evaluation-driven development.*
 
-### Features
+![Python](https://img.shields.io/badge/Python-3.12-blue.svg)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688.svg)
+![Docker](https://img.shields.io/badge/Docker-Ready-2496ED.svg)
+![Architecture](https://img.shields.io/badge/Architecture-Clean%20Architecture-orange.svg)
+![Tests](https://img.shields.io/badge/Tests-94%20Passing-success.svg)
+![License](https://img.shields.io/badge/License-MIT-lightgrey.svg)
 
-- **PyMuPDF loader** with heading detection and section extraction
-- **Adaptive chunker** (structure-aware with token fallback)
-- **Rule-based metadata extraction** (department, dates, titles)
-- **FAISS dense index** + **BM25 sparse index** with disk persistence
-- **LangGraph ingest workflow**: load → extract metadata → chunk → index
-- **Upload API** for PDF ingestion
+</div>
 
-## Phase 3 — Adaptive Retrieval
+---
 
-Phase 3 adds query analysis, adaptive routing, automatic metadata scoping, and confidence scoring via `RetrievalEngine`.
+# Overview
 
-### Pipeline
+Atlas is an adaptive Retrieval-Augmented Generation (RAG) platform built to demonstrate modern AI engineering practices rather than framework-centric development.
 
+The project focuses on designing a modular retrieval pipeline capable of handling complex search scenarios through adaptive routing, hybrid retrieval, query rewriting, query decomposition, reranking, and evidence-grounded answer generation.
+
+Instead of coupling business logic to AI frameworks, Atlas follows **Clean Architecture** and **Ports & Adapters**, allowing infrastructure components—including language models, vector stores, retrieval algorithms, and APIs—to evolve independently.
+
+The result is a maintainable, testable, and production-inspired retrieval system that emphasizes software engineering principles as much as retrieval quality.
+
+---
+
+# Why Atlas?
+
+Most public RAG repositories demonstrate how to integrate an orchestration framework.
+
+Atlas focuses on **how a retrieval system should be engineered.**
+
+The project emphasizes:
+
+- Retrieval engineering
+- Modular architecture
+- Explainable retrieval decisions
+- Framework independence
+- Evaluation-driven development
+- Production-oriented API design
+
+Rather than building the largest possible RAG pipeline, Atlas demonstrates how modern AI systems can be designed using maintainable software architecture.
+
+---
+
+# Key Features
+
+## Adaptive Retrieval
+
+- Adaptive Retrieval Strategy Selection
+- Dense Retrieval
+- BM25 Retrieval
+- Hybrid Retrieval
+- Reciprocal Rank Fusion (RRF)
+- Metadata Filtering
+
+---
+
+## Query Understanding
+
+- Query Analysis
+- Query Rewriting
+- Query Decomposition
+- Retrieval Strategy Selection
+- Context Optimization
+
+---
+
+## Ranking
+
+- Cross-Encoder Reranking
+- Confidence Scoring
+- Context Ranking
+- Top-K Selection
+
+---
+
+## Answer Generation
+
+- Evidence-Grounded Prompt Construction
+- Structured Citation Formatting
+- Configurable Prompt Templates
+- Response Metadata
+
+---
+
+## Engineering
+
+- Clean Architecture
+- Ports & Adapters
+- Dependency Injection
+- FastAPI
+- Docker
+- GitHub Actions
+- Comprehensive Unit Testing
+- Fake Infrastructure Adapters
+
+---
+
+## Evaluation
+
+- Retrieval Evaluation
+- Query Rewrite Evaluation
+- Routing Evaluation
+- Citation Validation
+- Golden Dataset Testing
+- Production Benchmark Scripts
+
+---
+
+# System Architecture
+
+```text
+                          User Query
+                               │
+                               ▼
+                 Query Analysis & Classification
+                               │
+          ┌────────────────────┴────────────────────┐
+          │                                         │
+          ▼                                         ▼
+  Query Rewriting                         Query Decomposition
+          │                                         │
+          └────────────────────┬────────────────────┘
+                               ▼
+                 Adaptive Retrieval Router
+                               │
+      ┌────────────────────────┼────────────────────────┐
+      │                        │                        │
+      ▼                        ▼                        ▼
+ BM25 Retrieval        Dense Retrieval        Hybrid Retrieval
+                                                   │
+                                                   ▼
+                                 Reciprocal Rank Fusion
+                                                   │
+                                                   ▼
+                                  Cross Encoder Reranker
+                                                   │
+                                                   ▼
+                                     Context Construction
+                                                   │
+                                                   ▼
+                                      Answer Generation
+                                                   │
+                                                   ▼
+                                     Citation Formatting
+                                                   │
+                                                   ▼
+                                          Final Response
 ```
-Query → QueryAnalyzer → AdaptiveRouter → MetadataScopeBuilder
-     → HybridRetriever → ConfidenceScorer → Result + Trace
+
+---
+
+# Clean Architecture
+
+Atlas follows a layered architecture that separates business logic from infrastructure.
+
+```text
+                    Presentation Layer
+                FastAPI REST Endpoints
+                         │
+                         ▼
+                Application Use Cases
+                         │
+                         ▼
+              Domain Models & Business Rules
+                         │
+                         ▼
+               Ports (Interfaces / Contracts)
+                         │
+                         ▼
+             Infrastructure Implementations
 ```
 
-Omit `strategy` in the request to enable adaptive routing.
+Business logic has no direct dependency on:
 
-### Features
+- FastAPI
+- FAISS
+- OpenRouter
+- LangGraph
+- Docker
 
-- **Rule-based query analysis** (policy IDs, departments, years, intent)
-- **Adaptive router** selects BM25 / dense / hybrid automatically
-- **Metadata scope builder** derives filters from analysis
-- **Confidence scoring** with explainable breakdown
+Infrastructure is accessed through adapters implementing application-defined ports.
 
-## Phase 4A — Query Rewriting
+---
 
-Conditional pre-retrieval rewriting when `rewrite_decision.should_rewrite` is true.
+# Repository Structure
 
-### Pipeline
-
-```
-Query → Original Analysis → [Rewrite?] → Resolved Analysis → Decompose → Retrieve
-```
-
-### Features
-
-- **Rule-based query rewriter** for follow-up phrasing (`"What about maternity leave?"` → `"What is the maternity leave policy?"`)
-- **Context-aware rewrite** via optional `context_messages` on `RetrievalRequest`
-- **`original_analysis` / `resolved_analysis`** with named trace steps for observability
-
-## Phase 4B — Query Decomposition
-
-Sequential subquery retrieval with per-subquery routing and weighted top-k allocation.
-
-### Pipeline
-
-```
-Resolved Analysis → Decompose → for each SubQuery: analyze → route → retrieve → merge (RRF)
-```
-
-### Features
-
-- **`SubQuery`** with `id`, `entity`, `source`, `query_type` — always at least one (pass-through)
-- **`DecompositionResult`** and **`SubQueryResult`** for Phase 5 per-subquery rerank/generate
-- **`SubQueryRetrievalPlan`** — per-subquery strategy, reason, and top-k budget
-- **`TopKAllocator`** — weighted budget (LOOKUP=3, FACTUAL=5, SEMANTIC=7)
-- **Sequential retrieval only** — no parallel execution in v1
-
-## Phase 5A — Cross-Encoder Reranking
-
-Post-merge reranking before confidence scoring and answer generation.
-
-### Pipeline
-
-```
-… → Merge (RRF) → CrossEncoderReranker → ConfidenceScorer → …
+```text
+atlas/
+│
+├── src/
+│   ├── api/
+│   ├── application/
+│   ├── config/
+│   ├── domain/
+│   ├── infrastructure/
+│   └── main.py
+│
+├── docs/
+│
+├── eval/
+│
+├── scripts/
+│
+├── tests/
+│
+├── docker/
+│
+├── .github/
+│
+├── docker-compose.yml
+├── pyproject.toml
+└── README.md
 ```
 
-### Features
+---
 
-- **`RerankerPort`** with `CrossEncoderReranker` (Sentence Transformers) and `FakeReranker` for tests
-- Rerank step in `RetrievalTrace` with before/after chunk IDs and latency
-- Dedicated `rerank` eval suite (Recall@k/MRR before vs after)
+# Technology Stack
 
-## Phase 5B — Evidence-Grounded Answer Generation
+| Category | Technology |
+|-----------|------------|
+| Language | Python 3.12 |
+| API | FastAPI |
+| Architecture | Clean Architecture |
+| Pattern | Ports & Adapters |
+| Dependency Injection | Python DI |
+| Sparse Retrieval | BM25 |
+| Dense Retrieval | FAISS |
+| Embeddings | BAAI/bge-base-en-v1.5 |
+| Reranker | BAAI/bge-reranker-base |
+| LLM Provider | OpenRouter |
+| Workflow | LangGraph (Document Ingestion) |
+| PDF Processing | PyMuPDF |
+| Testing | Pytest |
+| Containerization | Docker |
+| CI/CD | GitHub Actions |
 
-Answer generation on top of the frozen retrieval pipeline.
+---
 
-### Pipeline
+# Retrieval Pipeline
 
+## 1. Query Analysis
+
+Every incoming query is analysed to determine:
+
+- query complexity
+- retrieval intent
+- routing strategy
+- decomposition requirements
+
+---
+
+## 2. Query Rewriting
+
+Ambiguous user queries are rewritten into retrieval-friendly queries.
+
+Example
+
+Input
+
+```text
+What's the waiting period?
 ```
-Query → Analyze → [Rewrite] → Decompose → Retrieve → Merge → Rerank
-     → Confidence → ContextBuilder → AnswerGenerator → GeneratedAnswer
+
+Rewritten
+
+```text
+What is the waiting period for pre-existing diseases under the policy?
 ```
 
-### Features
+---
 
-- **`AnswerGeneratorPort`** with `LLMAnswerGenerator` (configurable LLM providers) and `FakeAnswerGenerator` for tests
-- **`ContextBuilder`** — selects reranked chunks, preserves metadata, enforces token budget
-- **`PromptBuilder`** — loads external templates from `prompts/system.txt` and `prompts/answer_generation.txt`
-- **`GeneratedAnswer`** — structured output with `used_chunk_ids`, token counts, and latency
-- Dedicated `answer_generation` eval suite (generation success, groundedness, latency, tokens)
+## 3. Query Decomposition
 
-## Phase 5C — Citation Formatting & Evidence Attribution
+Complex questions are decomposed into smaller retrieval tasks.
 
-Structured citations are attached **after** answer generation without modifying the raw answer text.
+Example
 
-### Pipeline
-
-```
-… → AnswerGenerator → GeneratedAnswer → CitationFormatter → citations + formats
+```text
+Explain maternity leave and insurance eligibility.
 ```
 
-### Features
+becomes
 
-- **`CitationFormatterPort`** with `EvidenceCitationFormatter` (domain policy)
-- **`Citation`** model — `chunk_id`, `document_id`, `page_number`, `section_title`, `confidence`, `excerpt`
-- **`CitationFormats`** — Markdown, plain text, and JSON renderings on `GeneratedAnswer`
-- Citations preserve rerank order via `used_chunk_ids`
-- Dedicated `citation` eval suite (coverage, precision, missing/invalid citation rate)
+```text
+Subquery 1
 
-## Production AI Models
+Explain maternity leave.
 
-Production uses real adapters by default. Unit tests opt into fakes via pytest fixtures.
+Subquery 2
 
-| Component | Production adapter | Default model | Test toggle |
-|---|---|---|---|
-| Embedder | `SentenceTransformerEmbedder` | `BAAI/bge-base-en-v1.5` | `ADAPTIVE_RAG_FAKE_EMBEDDER=1` |
-| Reranker | `CrossEncoderReranker` | `BAAI/bge-reranker-base` | `ADAPTIVE_RAG_FAKE_RERANKER=1` |
-| LLM | `OpenRouterProviderLLM` | `OPENROUTER_MODEL` | `ADAPTIVE_RAG_FAKE_LLM=1` |
+Explain insurance eligibility.
+```
+
+---
+
+## 4. Adaptive Routing
+
+Atlas dynamically selects an appropriate retrieval strategy.
+
+Supported strategies
+
+- Dense Retrieval
+- BM25 Retrieval
+- Hybrid Retrieval
+
+---
+
+## 5. Hybrid Retrieval
+
+Atlas combines lexical and semantic search using Reciprocal Rank Fusion (RRF).
+
+Benefits include:
+
+- improved recall
+- reduced retrieval bias
+- complementary ranking signals
+
+---
+
+## 6. Cross Encoder Reranking
+
+Retrieved passages are reranked using a transformer-based cross encoder to improve semantic relevance before answer generation.
+
+---
+
+## 7. Context Construction
+
+The highest ranked passages are assembled into a structured prompt while preserving metadata including:
+
+- source document
+- page number
+- chunk identifier
+
+---
+
+## 8. Answer Generation
+
+The language model generates responses using only retrieved evidence.
+
+This helps reduce unsupported or hallucinated responses.
+
+---
+
+## 9. Citation Formatting
+
+Supporting evidence is formatted into structured citations before returning the final response.
+
+Supported formats:
+
+- Markdown
+- Plain Text
+- JSON
+
+---
+
+# Getting Started
+
+## Prerequisites
+
+- Python 3.12+
+- uv
+- Docker (optional)
+- OpenRouter API Key
+
+---
+
+## Clone Repository
 
 ```bash
-# .env
-EMBEDDING_MODEL=BAAI/bge-base-en-v1.5
-RERANKER_MODEL=BAAI/bge-reranker-base
-OPENROUTER_API_KEY=sk-or-...
-OPENROUTER_MODEL=meta-llama/llama-3.1-8b-instruct
+git clone https://github.com/<username>/atlas.git
+
+cd atlas
 ```
 
-```bash
-# Fast unit tests (fakes)
-uv run pytest -m "not integration"
+---
 
-# Real-model integration tests
-uv run pytest -m integration
-
-# End-to-end production benchmark
-uv run python scripts/run_production_benchmark.py
-```
-
-See [docs/production-models-report.md](docs/production-models-report.md) for benchmark output.
-
-### Version roadmap
-
-| Tag | Milestone |
-|---|---|
-| `v1.0.0-adaptive-retrieval` | Retrieval v1.0 freeze — routing, rewrite, decomposition, hybrid retrieval, eval baseline |
-| `v1.2.0-answer-generation` | Phase 5A reranking + Phase 5B answer generation |
-| `v1.2.1-production-hardening` | Security, error handling, readiness, config wiring |
-| *upcoming* | Phase 5C — citation formatting (`v1.3.0-citation-formatting`) |
-
-## Evaluation Framework
-
-Retrieval features are **frozen** until benchmarks pass. See [docs/evaluation.md](docs/evaluation.md).
-
-```bash
-uv run python eval/run_eval.py
-uv run python eval/run_eval.py --suite golden
-```
-
-Stage-specific datasets cover rewrite, routing, decomposition, retrieval, rerank, answer generation, citation formatting, confidence, failure cases, and a golden demo for interviews.
-
-### Architecture (v1.2)
-
-```
-┌─────────┐    ┌──────────────┐    ┌─────────────┐    ┌──────────────┐
-│  Query  │───▶│ QueryAnalyzer│───▶│QueryRewriter│───▶│ Decomposer   │
-└─────────┘    └──────────────┘    └─────────────┘    └──────┬───────┘
-                                                               │
-       ┌───────────────────────────────────────────────────────┘
-       ▼
-┌──────────────┐    ┌─────────────┐    ┌──────────────┐    ┌─────────────┐
-│HybridRetrieve│───▶│ Merge (RRF) │───▶│  Reranker   │───▶│ Confidence  │
-└──────────────┘    └─────────────┘    └──────────────┘    └──────┬──────┘
-                                                                    │
-       ┌────────────────────────────────────────────────────────────┘
-       ▼
-┌────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│ ContextBuilder │───▶│ AnswerGenerator  │───▶│ GeneratedAnswer │
-└────────────────┘    └──────────────────┘    └─────────────────┘
-```
-
-See [docs/architecture.md](docs/architecture.md) for layer details, ADRs, and known limitations.
-
-## Quick Start
+## Install Dependencies
 
 ```bash
 uv sync
+```
+
+---
+
+## Configure Environment
+
+Copy the example configuration.
+
+```bash
+cp .env.example .env
+```
+
+Update the required environment variables.
+
+---
+
+## Run Tests
+
+```bash
 uv run pytest
+```
+
+---
+
+## Start Development Server
+
+```bash
 uv run adaptive-rag
 ```
 
-## API
-
-- `GET /health` — lightweight liveness check
-- `GET /ready` — dependency readiness check (storage, embedder, LLM config)
-- `POST /api/v1/query` — RAG query (skeleton, Phase 4+)
-- `POST /api/v1/ingest` — ingest from local file path
-- `POST /api/v1/ingest/upload` — upload PDF for ingestion
-- `GET /api/v1/collections/{collection_id}/stats` — index statistics
-- `POST /api/v1/retrieve` — adaptive retrieval + reranking + answer generation
-
-### Retrieve example
+or
 
 ```bash
-curl -X POST "http://localhost:8000/api/v1/retrieve" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "query": "What is the annual leave policy?",
-    "collection_id": "default",
-    "strategy": "hybrid",
-    "top_k": 5
-  }'
+uv run python -m src.main
 ```
 
-### Upload example
+---
+
+## Docker
+
+Build the application.
 
 ```bash
-curl -X POST "http://localhost:8000/api/v1/ingest/upload" \
-  -F "file=@document.pdf" \
-  -F "collection_id=default"
+docker compose build
 ```
 
-## Configuration
+Run services.
 
-Copy `.env.example` to `.env`. Key settings:
+```bash
+docker compose up
+```
 
-- `CHUNKING__MAX_TOKENS`, `CHUNKING__STRATEGY`
-- `STORAGE__INDEX_DIR`, `STORAGE__UPLOAD_DIR`
-- `EMBEDDING__MODEL_NAME`
-- `STORAGE__MAX_UPLOAD_BYTES` — PDF upload size limit (default 20MB)
-- `ADAPTIVE_RAG_FAKE_EMBEDDER=1` — use deterministic fake embedder (unit tests)
-- `ADAPTIVE_RAG_FAKE_RERANKER=1` — passthrough reranker for tests/eval
-- `ADAPTIVE_RAG_FAKE_LLM=1` — deterministic answer generator for tests/eval
-- `ANSWER_GENERATION__MAX_CONTEXT_TOKENS` — context window budget for answer prompts
-- `LLM__PROVIDER`, `LLM__MODEL` — answer generation LLM (production)
+---
 
-## Architecture Notes
+# API Overview
 
-- Domain policies (`AdaptiveChunker`, `DocumentMetadataExtractor`) contain business logic
-- Infrastructure adapters implement ports (PyMuPDF, FAISS, BM25, Sentence Transformers)
-- `CollectionIndexRegistry` manages per-collection indexes with persistence
+| Method | Endpoint | Description |
+|---------|----------|-------------|
+| GET | `/health` | Liveness check |
+| GET | `/ready` | Readiness check |
+| POST | `/api/v1/retrieve` | Adaptive Hybrid Retrieval |
+| POST | `/api/v1/ingest` | Document ingestion |
+| POST | `/api/v1/ingest/upload` | Upload PDF |
+| GET | `/api/v1/collections/{collection_id}/stats` | Collection statistics |
 
-## Platform Compatibility
+---
 
-On older macOS x86_64 hosts, the project pins compatible versions of `faiss-cpu` and `torch`. Use `uv sync` to install resolved dependencies.
+# Example Request
+
+```http
+POST /api/v1/retrieve
+```
+
+```json
+{
+  "query": "What is the waiting period for pre-existing diseases?",
+  "collection_id": "insurance-policy",
+  "top_k": 5
+}
+```
+
+---
+
+# Example Response
+
+```json
+{
+  "answer": "...",
+  "citations": [
+    {
+      "document": "policy.pdf",
+      "page": 12
+    }
+  ],
+  "latency_ms": 842,
+  "retrieval_strategy": "hybrid"
+}
+```
+
+---
+# Configuration
+
+Atlas uses environment variables for configuring language models,
+retrieval components, storage paths, and runtime settings.
+
+Create a local configuration file.
+
+```bash
+cp .env.example .env
+```
+
+Update the required values before starting the application.
+
+---
+
+# Testing
+
+Atlas includes automated tests covering application logic,
+retrieval components, infrastructure adapters, and API endpoints.
+
+Run all tests
+
+```bash
+uv run pytest
+```
+
+Run only unit tests
+
+```bash
+uv run pytest -m "not integration"
+```
+
+Run integration tests
+
+```bash
+uv run pytest -m integration
+```
+
+---
+
+# Evaluation
+
+Atlas follows an evaluation-driven development approach.
+
+Each retrieval stage can be validated independently to measure
+pipeline quality and identify regressions.
+
+Current evaluation includes:
+
+- Retrieval Quality
+- Query Rewriting
+- Query Routing
+- Query Decomposition
+- Cross-Encoder Reranking
+- Citation Formatting
+- Golden Dataset Evaluation
+- Production Benchmark Scripts
+
+Evaluation reports are generated under:
+
+```text
+eval/reports/
+```
+
+---
+
+# Design Principles
+
+Atlas is built around a small set of engineering principles.
+
+## Separation of Concerns
+
+Business logic remains independent of infrastructure.
+
+External systems communicate through adapters rather than directly
+coupling application logic to implementation details.
+
+---
+
+## Retrieval Before Generation
+
+Answer quality depends on retrieval quality.
+
+Rather than relying solely on prompt engineering,
+Atlas prioritizes improving retrieval through query understanding,
+adaptive routing, reranking, and evidence selection.
+
+---
+
+## Evaluation First
+
+New functionality should be measurable.
+
+Retrieval improvements are evaluated before becoming
+part of the default pipeline.
+
+---
+
+## Maintainability
+
+The project is organised to allow retrieval algorithms,
+language models, vector stores, and infrastructure
+to evolve independently.
+
+---
+
+# Project Status
+
+Current implementation includes:
+
+- Adaptive Hybrid Retrieval
+- Query Rewriting
+- Query Decomposition
+- Reciprocal Rank Fusion
+- Cross-Encoder Reranking
+- Citation Formatting
+- FastAPI API
+- Docker Support
+- GitHub Actions CI
+- Evaluation Framework
+
+---
+
+# Limitations
+
+Atlas intentionally keeps several areas simple.
+
+Current limitations include:
+
+- Sequential execution for decomposed queries
+- Rule-based query analysis
+- Single-node deployment
+- No authentication or authorization layer
+- Citation verification is not implemented
+
+These trade-offs keep the project focused on retrieval engineering
+while leaving room for future extensions.
+
+---
+
+# Roadmap
+
+Potential future enhancements include:
+
+- Streaming responses
+- LLM-assisted query analysis
+- Multi-vector retrieval
+- Additional language model providers
+- Observability dashboards
+- Authentication and user management
+
+---
+
+# Contributing
+
+Contributions are welcome.
+
+Please open an issue before submitting significant changes
+to discuss the proposed approach.
+
+---
+
+# License
+
+This project is licensed under the MIT License.
+
+---
+
+# Acknowledgements
+
+Atlas was built as a portfolio project to explore
+production-inspired AI engineering practices including
+retrieval engineering, clean architecture,
+evaluation-driven development, and maintainable software design.
