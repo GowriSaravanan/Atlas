@@ -14,9 +14,19 @@ from adaptive_rag.application.use_cases.resolve_context import ResolveConversati
 from adaptive_rag.application.workflow.ingest_pipeline import compile_ingest_graph
 from adaptive_rag.application.workflow.nodes.ingest_nodes import IngestNodeContext
 from adaptive_rag.application.workflow.query_graph import compile_query_graph
+from adaptive_rag.config.mappers import (
+    resolve_prompts_dir,
+    to_answer_generation_policy_config,
+    to_chunking_policy_config,
+    to_confidence_weight_config,
+    to_fusion_policy_config,
+    to_retrieval_policy_config,
+)
 from adaptive_rag.config.settings import Settings, get_settings
 from adaptive_rag.domain.policies.adaptive_chunker import AdaptiveChunker
+from adaptive_rag.domain.policies.confidence import ConfidenceScorer
 from adaptive_rag.domain.policies.document_metadata_extractor import DocumentMetadataExtractor
+from adaptive_rag.domain.policies.rrf import ReciprocalRankFusion
 from adaptive_rag.domain.ports.embedder import EmbedderPort
 
 if TYPE_CHECKING:
@@ -48,6 +58,8 @@ class Container:
     _reranker: RerankerPort | None = field(default=None, repr=False)
     _llm: LLMPort | None = field(default=None, repr=False)
     _answer_generator: AnswerGeneratorPort | None = field(default=None, repr=False)
+    _fusion_engine: object | None = field(default=None, repr=False)
+    _confidence_scorer: ConfidenceScorer | None = field(default=None, repr=False)
     _index_registry: IndexRegistryPort | None = field(default=None, repr=False)
     _ingest_context: IngestNodeContext | None = field(default=None, repr=False)
 
@@ -118,8 +130,10 @@ class Container:
             from adaptive_rag.infrastructure.llm.fake_answer_generator import FakeAnswerGenerator
             from adaptive_rag.infrastructure.llm.llm_answer_generator import LLMAnswerGenerator
 
-            context_builder = ContextBuilder(self.settings.answer_generation)
-            prompt_builder = PromptBuilder(self.settings.answer_generation)
+            context_builder = ContextBuilder(
+                to_answer_generation_policy_config(self.settings.answer_generation)
+            )
+            prompt_builder = PromptBuilder(resolve_prompts_dir(self.settings))
             if _use_fake_llm():
                 self._answer_generator = FakeAnswerGenerator(
                     context_builder=context_builder,
@@ -161,7 +175,7 @@ class Container:
             self._ingest_context = IngestNodeContext(
                 document_loader=PyMuPDFLoader(),
                 metadata_extractor=DocumentMetadataExtractor(),
-                chunker=AdaptiveChunker(self.settings.chunking),
+                chunker=AdaptiveChunker(to_chunking_policy_config(self.settings.chunking)),
                 index_registry=self.index_registry,
             )
         return self._ingest_context
@@ -188,14 +202,30 @@ class Container:
         return self._query_rag_use_case
 
     @property
+    def fusion_engine(self):
+        if self._fusion_engine is None:
+            self._fusion_engine = ReciprocalRankFusion(
+                to_fusion_policy_config(self.settings.retrieval)
+            )
+        return self._fusion_engine
+
+    @property
+    def confidence_scorer(self) -> ConfidenceScorer:
+        if self._confidence_scorer is None:
+            self._confidence_scorer = ConfidenceScorer(
+                retrieval=to_retrieval_policy_config(self.settings.retrieval),
+                weights=to_confidence_weight_config(self.settings.confidence_weights),
+            )
+        return self._confidence_scorer
+
+    @property
     def hybrid_retriever(self):
         if self._hybrid_retriever is None:
             from adaptive_rag.application.services.hybrid_retriever import HybridRetriever
-            from adaptive_rag.domain.policies.rrf import ReciprocalRankFusion
 
             self._hybrid_retriever = HybridRetriever(
                 index_registry=self.index_registry,
-                fusion_engine=ReciprocalRankFusion(self.settings.retrieval),
+                fusion_engine=self.fusion_engine,
                 settings=self.settings.retrieval,
             )
         return self._hybrid_retriever
@@ -204,14 +234,13 @@ class Container:
     def retrieval_engine(self):
         if self._retrieval_engine is None:
             from adaptive_rag.application.services.retrieval_engine import RetrievalEngine
-            from adaptive_rag.domain.policies.rrf import ReciprocalRankFusion
 
-            fusion_engine = ReciprocalRankFusion(self.settings.retrieval)
             self._retrieval_engine = RetrievalEngine(
                 index_registry=self.index_registry,
                 hybrid_retriever=self.hybrid_retriever,
                 settings=self.settings.retrieval,
-                fusion_engine=fusion_engine,
+                fusion_engine=self.fusion_engine,
+                confidence_scorer=self.confidence_scorer,
                 reranker=self.reranker,
                 answer_generator=self.answer_generator,
             )

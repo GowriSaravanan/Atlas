@@ -26,3 +26,10 @@ class HealthResponse(BaseModel):
     status: str
     app_name: str
     version: str
+
+
+class ReadinessResponse(BaseModel):
+    """Readiness check response."""
+
+    ready: bool
+    checks: dict[str, bool]

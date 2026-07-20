@@ -7,6 +7,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
+from adaptive_rag.api.exception_handlers import register_exception_handlers
 from adaptive_rag.api.dependencies.container import get_container
 from adaptive_rag.api.routes import health, ingest, query, retrieval
 from adaptive_rag.config.settings import get_settings
@@ -46,6 +47,7 @@ def create_app() -> FastAPI:
     app.include_router(query.router, prefix="/api/v1")
     app.include_router(ingest.router, prefix="/api/v1")
     app.include_router(retrieval.router, prefix="/api/v1")
+    register_exception_handlers(app)
     return app
 
 

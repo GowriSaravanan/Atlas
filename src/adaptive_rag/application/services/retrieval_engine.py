@@ -72,7 +72,9 @@ class RetrievalEngine:
         self._query_decomposer = query_decomposer or RuleBasedQueryDecomposer(self._query_analyzer)
         self._adaptive_router = adaptive_router or AdaptiveRouter()
         self._scope_builder = scope_builder or MetadataScopeBuilder()
-        self._confidence_scorer = confidence_scorer or ConfidenceScorer(settings)
+        self._confidence_scorer = confidence_scorer
+        if self._confidence_scorer is None:
+            raise ValueError("confidence_scorer must be provided")
         self._top_k_allocator = top_k_allocator or TopKAllocator()
         self._result_merger = result_merger or SubqueryResultMerger(fusion_engine)
         self._reranker = reranker

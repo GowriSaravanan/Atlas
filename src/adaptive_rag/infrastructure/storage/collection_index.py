@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from pathlib import Path
 
+from adaptive_rag.domain.errors import EmbedderCompatibilityError
 from adaptive_rag.domain.models.document import Chunk
 from adaptive_rag.domain.models.index import (
     CollectionStats,
@@ -20,6 +21,7 @@ from adaptive_rag.domain.ports.sparse_retriever import SparseRetrieverPort
 from adaptive_rag.domain.ports.sparse_retriever_factory import SparseRetrieverFactoryPort
 from adaptive_rag.domain.ports.vector_store import VectorStorePort
 from adaptive_rag.domain.ports.vector_store_factory import VectorStoreFactoryPort
+from adaptive_rag.domain.validation.collection_id import resolve_collection_path, validate_collection_id
 from adaptive_rag.observability.logging import get_logger
 
 logger = get_logger(__name__)
@@ -124,6 +126,7 @@ class CollectionIndexRegistry(IndexRegistryPort):
         return self._embedder
 
     def index_chunks(self, collection_id: str, chunks: list[Chunk]) -> None:
+        validate_collection_id(collection_id)
         index = self.get_or_create(collection_id)
         index.add_chunks(chunks)
         self.persist(collection_id)
@@ -165,10 +168,11 @@ class CollectionIndexRegistry(IndexRegistryPort):
         return self.get_or_create(collection_id).search_sparse(query, scope, top_k)
 
     def get_or_create(self, collection_id: str) -> CollectionIndex:
+        validate_collection_id(collection_id)
         if collection_id in self._collections:
             return self._collections[collection_id]
 
-        collection_path = self._base_path / collection_id
+        collection_path = resolve_collection_path(self._base_path, collection_id)
         metadata = self._load_or_create_metadata(collection_id, collection_path)
 
         if collection_path.exists() and (collection_path / _METADATA_FILE).exists():
@@ -246,7 +250,7 @@ class CollectionIndexRegistry(IndexRegistryPort):
                 },
             )
         if metadata.embedder_dimension != self._embedder.dimension:
-            raise ValueError(
+            raise EmbedderCompatibilityError(
                 f"Embedder dimension mismatch for collection {metadata.collection_id}: "
                 f"index={metadata.embedder_dimension}, current={self._embedder.dimension}",
             )

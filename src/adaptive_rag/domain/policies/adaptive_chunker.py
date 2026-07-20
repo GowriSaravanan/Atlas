@@ -5,7 +5,7 @@ from __future__ import annotations
 import uuid
 from typing import Any
 
-from adaptive_rag.config.settings import ChunkingSettings
+from adaptive_rag.domain.config.policy_config import ChunkingPolicyConfig
 from adaptive_rag.domain.models.document import Chunk, Document
 from adaptive_rag.domain.policies.token_utils import estimate_token_count
 from adaptive_rag.domain.ports.chunker import ChunkerPort
@@ -14,8 +14,8 @@ from adaptive_rag.domain.ports.chunker import ChunkerPort
 class AdaptiveChunker(ChunkerPort):
     """Structure-aware chunking with fixed-size token fallback."""
 
-    def __init__(self, settings: ChunkingSettings) -> None:
-        self._settings = settings
+    def __init__(self, config: ChunkingPolicyConfig) -> None:
+        self._settings = config
 
     def chunk(self, document: Document) -> list[Chunk]:
         """Chunk a document using structure-aware or fixed strategy."""

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from adaptive_rag.config.settings import RetrievalSettings
+from adaptive_rag.domain.config.policy_config import FusionPolicyConfig
 from adaptive_rag.domain.models.retrieval import ScoredChunk
 from adaptive_rag.domain.ports.fusion_engine import FusionEnginePort
 
@@ -10,8 +10,8 @@ from adaptive_rag.domain.ports.fusion_engine import FusionEnginePort
 class ReciprocalRankFusion(FusionEnginePort):
     """Fuse multiple ranked lists using Reciprocal Rank Fusion (RRF)."""
 
-    def __init__(self, settings: RetrievalSettings) -> None:
-        self._k = settings.rrf_k
+    def __init__(self, config: FusionPolicyConfig) -> None:
+        self._k = config.rrf_k
 
     def fuse(
         self,

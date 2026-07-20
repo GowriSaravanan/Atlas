@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from adaptive_rag.config.settings import AnswerGenerationSettings
+from adaptive_rag.domain.config.policy_config import AnswerGenerationPolicyConfig
 from adaptive_rag.domain.models.document import Chunk
 from adaptive_rag.domain.models.retrieval import ScoredChunk
 from adaptive_rag.domain.policies.context_builder import ContextBuilder
@@ -18,7 +18,7 @@ def _chunk(chunk_id: str, content: str, **metadata: str) -> ScoredChunk:
 
 
 def test_context_builder_orders_by_rank_and_preserves_metadata() -> None:
-    builder = ContextBuilder(AnswerGenerationSettings(max_context_tokens=512))
+    builder = ContextBuilder(AnswerGenerationPolicyConfig(max_context_tokens=512))
     evidence = [
         ScoredChunk(
             chunk=Chunk(id="b", document_id="doc-1", content="second chunk", metadata={"section_title": "B"}),
@@ -43,7 +43,7 @@ def test_context_builder_orders_by_rank_and_preserves_metadata() -> None:
 
 
 def test_context_builder_enforces_token_budget() -> None:
-    builder = ContextBuilder(AnswerGenerationSettings(max_context_tokens=256))
+    builder = ContextBuilder(AnswerGenerationPolicyConfig(max_context_tokens=256))
     evidence = [
         _chunk("c1", "word " * 200, section_title="One"),
         _chunk("c2", "word " * 200, section_title="Two"),
@@ -57,7 +57,7 @@ def test_context_builder_enforces_token_budget() -> None:
 
 
 def test_context_builder_returns_empty_context_for_no_evidence() -> None:
-    builder = ContextBuilder(AnswerGenerationSettings())
+    builder = ContextBuilder(AnswerGenerationPolicyConfig(max_context_tokens=2048))
     built = builder.build([])
 
     assert built.context == ""

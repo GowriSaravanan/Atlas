@@ -385,6 +385,20 @@ LLM__MODEL=llama3
 
 Eval adds an `answer_generation` suite measuring generation success, basic groundedness, latency, and token usage.
 
+---
+
+## Production Hardening (v1.2.1)
+
+| Control | Behavior |
+|---|---|
+| Ingest path restriction | `POST /ingest` accepts only paths inside `STORAGE__UPLOAD_DIR` |
+| Collection ID validation | `[a-zA-Z0-9_-]+` only; resolved paths must stay under index dir |
+| Upload validation | Max size, PDF magic bytes, MIME type checks |
+| Error handling | Centralized JSON error responses; no stack traces |
+| Readiness | `GET /ready` checks storage, embedder, LLM config |
+| Domain config | Policies receive plain value objects, not Pydantic Settings |
+| Gemini auth | API key sent via `x-goog-api-key` header |
+
 #### ContextBuilder token budget (known limitation)
 
 `ContextBuilder` enforces `ANSWER_GENERATION__MAX_CONTEXT_TOKENS` using a **word-count heuristic**, not a model tokenizer:

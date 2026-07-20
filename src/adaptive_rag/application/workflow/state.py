@@ -80,7 +80,12 @@ class IngestGraphState(TypedDict, total=False):
     error: str | None
 
 
-def initial_rag_state(*, raw_query: str, conversation_id: str) -> RAGGraphState:
+def initial_rag_state(
+    *,
+    raw_query: str,
+    conversation_id: str,
+    max_escalations: int = 3,
+) -> RAGGraphState:
     """Build initial query workflow state."""
     return RAGGraphState(
         raw_query=raw_query,
@@ -100,7 +105,7 @@ def initial_rag_state(*, raw_query: str, conversation_id: str) -> RAGGraphState:
         reranked_chunks=[],
         global_confidence=None,
         escalation_level=0,
-        max_escalations=3,
+        max_escalations=max_escalations,
         answer=None,
         citations=[],
         answer_mode="full",

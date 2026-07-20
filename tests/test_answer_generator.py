@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 
-from adaptive_rag.config.settings import AnswerGenerationSettings, LLMSettings
+from adaptive_rag.config.mappers import (
+    resolve_prompts_dir,
+    to_answer_generation_policy_config,
+)
+from adaptive_rag.config.settings import AnswerGenerationSettings, LLMSettings, get_settings
 from adaptive_rag.domain.models.document import Chunk
 from adaptive_rag.domain.models.retrieval import ScoredChunk
 from adaptive_rag.domain.policies.context_builder import ContextBuilder
@@ -32,8 +36,8 @@ def test_llm_answer_generator_uses_context_and_returns_metadata() -> None:
     llm = FakeLLM(LLMSettings())
     generator = LLMAnswerGenerator(
         llm=llm,
-        context_builder=ContextBuilder(settings),
-        prompt_builder=PromptBuilder(settings),
+        context_builder=ContextBuilder(to_answer_generation_policy_config(settings)),
+        prompt_builder=PromptBuilder(resolve_prompts_dir(get_settings())),
     )
 
     result = generator.generate("How many sick leave days?", _evidence())

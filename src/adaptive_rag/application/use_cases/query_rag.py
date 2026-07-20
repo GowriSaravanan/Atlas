@@ -5,6 +5,7 @@ from __future__ import annotations
 from adaptive_rag.application.dto.responses import RAGResponse
 from adaptive_rag.application.workflow.query_graph import compile_query_graph
 from adaptive_rag.application.workflow.state import initial_rag_state
+from adaptive_rag.config.settings import get_settings
 from adaptive_rag.observability.logging import get_logger
 
 logger = get_logger(__name__)
@@ -18,7 +19,11 @@ class QueryRAGUseCase:
 
     def execute(self, *, query: str, conversation_id: str = "default") -> RAGResponse:
         """Run the query RAG workflow."""
-        state = initial_rag_state(raw_query=query, conversation_id=conversation_id)
+        state = initial_rag_state(
+            raw_query=query,
+            conversation_id=conversation_id,
+            max_escalations=get_settings().retrieval.max_escalations,
+        )
         result = self._graph.invoke(state)
         logger.info("Query workflow completed", extra={"ctx_query": query})
         return RAGResponse(

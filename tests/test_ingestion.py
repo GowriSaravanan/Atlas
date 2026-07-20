@@ -11,6 +11,7 @@ from adaptive_rag.api.app import create_app
 from adaptive_rag.api.dependencies.container import get_container, reset_container
 from adaptive_rag.application.workflow.ingest_pipeline import compile_ingest_graph
 from adaptive_rag.application.workflow.state import initial_ingest_state
+from adaptive_rag.config.mappers import to_chunking_policy_config
 from adaptive_rag.config.settings import get_settings
 from adaptive_rag.domain.models.retrieval import SearchScope
 from adaptive_rag.domain.policies.adaptive_chunker import AdaptiveChunker
@@ -40,7 +41,7 @@ def test_adaptive_chunker_respects_sections(sample_pdf: Path) -> None:
     document = loader.load(str(sample_pdf))
     document = DocumentMetadataExtractor().apply_to_document(document)
 
-    chunks = AdaptiveChunker(settings.chunking).chunk(document)
+    chunks = AdaptiveChunker(to_chunking_policy_config(settings.chunking)).chunk(document)
     assert len(chunks) >= 1
     assert all(chunk.token_count > 0 for chunk in chunks)
 

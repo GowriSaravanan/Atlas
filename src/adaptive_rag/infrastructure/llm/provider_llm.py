@@ -9,6 +9,7 @@ from pydantic import BaseModel
 
 from adaptive_rag.config.settings import LLMSettings
 from adaptive_rag.domain.ports.llm import LLMPort
+from adaptive_rag.domain.errors import ProviderError
 from adaptive_rag.observability.logging import get_logger
 
 logger = get_logger(__name__)
@@ -92,8 +93,11 @@ class ProviderLLM(LLMPort):
             "options": {"temperature": temperature},
         }
         url = f"{self._settings.ollama_base_url.rstrip('/')}/api/chat"
-        response = httpx.post(url, json=payload, timeout=120.0)
-        response.raise_for_status()
+        try:
+            response = httpx.post(url, json=payload, timeout=120.0)
+            response.raise_for_status()
+        except httpx.HTTPError as exc:
+            raise ProviderError(f"Ollama request failed: {exc}") from exc
         data = response.json()
         return str(data["message"]["content"]).strip()
 
@@ -114,13 +118,16 @@ class ProviderLLM(LLMPort):
             "max_tokens": self._settings.max_tokens,
         }
         headers = {"Authorization": f"Bearer {api_key}"}
-        response = httpx.post(
-            f"{base_url.rstrip('/')}/chat/completions",
-            json=payload,
-            headers=headers,
-            timeout=120.0,
-        )
-        response.raise_for_status()
+        try:
+            response = httpx.post(
+                f"{base_url.rstrip('/')}/chat/completions",
+                json=payload,
+                headers=headers,
+                timeout=120.0,
+            )
+            response.raise_for_status()
+        except httpx.HTTPError as exc:
+            raise ProviderError(f"LLM provider request failed: {exc}") from exc
         data = response.json()
         return str(data["choices"][0]["message"]["content"]).strip()
 
@@ -136,15 +143,16 @@ class ProviderLLM(LLMPort):
         user_parts = [message["content"] for message in messages if message["role"] != "system"]
         prompt = "\n\n".join(system_parts + user_parts)
         model = self._settings.model
-        url = (
-            "https://generativelanguage.googleapis.com/v1beta/models/"
-            f"{model}:generateContent?key={self._settings.gemini_api_key}"
-        )
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
+        headers = {"x-goog-api-key": self._settings.gemini_api_key}
         payload = {
             "contents": [{"parts": [{"text": prompt}]}],
             "generationConfig": {"temperature": temperature},
         }
-        response = httpx.post(url, json=payload, timeout=120.0)
-        response.raise_for_status()
+        try:
+            response = httpx.post(url, json=payload, headers=headers, timeout=120.0)
+            response.raise_for_status()
+        except httpx.HTTPError as exc:
+            raise ProviderError(f"Gemini request failed: {exc}") from exc
         data = response.json()
         return str(data["candidates"][0]["content"]["parts"][0]["text"]).strip()

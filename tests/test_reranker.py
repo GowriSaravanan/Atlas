@@ -75,6 +75,8 @@ def test_retrieval_engine_reranks_before_confidence(sample_pdf) -> None:
     from adaptive_rag.api.dependencies.container import get_container
     from adaptive_rag.domain.policies.rrf import ReciprocalRankFusion
 
+    from adaptive_rag.config.mappers import to_fusion_policy_config
+
     container = get_container()
     container.ensure_storage_dirs()
     container.ingest_document_use_case.execute(
@@ -87,7 +89,8 @@ def test_retrieval_engine_reranks_before_confidence(sample_pdf) -> None:
         index_registry=container.index_registry,
         hybrid_retriever=container.hybrid_retriever,
         settings=container.settings.retrieval,
-        fusion_engine=ReciprocalRankFusion(container.settings.retrieval),
+        fusion_engine=ReciprocalRankFusion(to_fusion_policy_config(container.settings.retrieval)),
+        confidence_scorer=container.confidence_scorer,
         reranker=recording_reranker,
     )
 

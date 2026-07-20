@@ -11,6 +11,8 @@ from adaptive_rag.api.app import create_app
 from adaptive_rag.api.dependencies.container import get_container, reset_container
 from adaptive_rag.config.settings import get_settings
 from adaptive_rag.domain.models.retrieval import RetrievalStrategy
+from adaptive_rag.config.mappers import to_fusion_policy_config
+from adaptive_rag.config.settings import get_settings
 from adaptive_rag.domain.policies.rrf import ReciprocalRankFusion
 from adaptive_rag.domain.models.document import Chunk
 from adaptive_rag.domain.models.retrieval import ScoredChunk
@@ -49,7 +51,7 @@ def test_rrf_fuses_ranked_lists() -> None:
     ]
 
     settings = get_settings()
-    fusion = ReciprocalRankFusion(settings.retrieval)
+    fusion = ReciprocalRankFusion(to_fusion_policy_config(settings.retrieval))
     fused = fusion.fuse({"dense": dense, "bm25": sparse}, "test query")
 
     assert len(fused) == 3

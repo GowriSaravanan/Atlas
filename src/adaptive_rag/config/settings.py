@@ -101,6 +101,7 @@ class StorageSettings(BaseSettings):
     data_dir: str = "data"
     index_dir: str = "data/indices"
     upload_dir: str = "data/uploads"
+    max_upload_bytes: int = Field(default=20 * 1024 * 1024, ge=1024, le=100 * 1024 * 1024)
 
 
 class LoggingSettings(BaseSettings):
@@ -124,7 +125,6 @@ class Settings(BaseSettings):
     app_name: str = "Adaptive Hybrid RAG Platform"
     app_version: str = "0.1.0"
     debug: bool = False
-    eval_mode: bool = False
 
     conversation: ConversationSettings = Field(default_factory=ConversationSettings)
     retrieval: RetrievalSettings = Field(default_factory=RetrievalSettings)

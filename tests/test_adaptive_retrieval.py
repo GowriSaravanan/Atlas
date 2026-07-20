@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from adaptive_rag.api.dependencies.container import get_container
+from adaptive_rag.config.mappers import to_confidence_weight_config, to_retrieval_policy_config
 from adaptive_rag.config.settings import get_settings
 from adaptive_rag.domain.models.conversation import Message, MessageRole
 from adaptive_rag.domain.models.query import QueryIntent, QueryType
@@ -62,7 +63,10 @@ def test_confidence_scorer_produces_breakdown() -> None:
     from adaptive_rag.domain.models.retrieval import ScoredChunk
 
     settings = get_settings()
-    scorer = ConfidenceScorer(settings.retrieval)
+    scorer = ConfidenceScorer(
+        retrieval=to_retrieval_policy_config(settings.retrieval),
+        weights=to_confidence_weight_config(settings.confidence_weights),
+    )
     analysis = QueryAnalyzer().analyze("HR leave policy")
     chunk = Chunk(
         id="c1",

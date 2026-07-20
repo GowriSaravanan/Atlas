@@ -155,7 +155,8 @@ uv run adaptive-rag
 
 ## API
 
-- `GET /health`
+- `GET /health` — lightweight liveness check
+- `GET /ready` — dependency readiness check (storage, embedder, LLM config)
 - `POST /api/v1/query` — RAG query (skeleton, Phase 4+)
 - `POST /api/v1/ingest` — ingest from local file path
 - `POST /api/v1/ingest/upload` — upload PDF for ingestion
@@ -190,7 +191,8 @@ Copy `.env.example` to `.env`. Key settings:
 - `CHUNKING__MAX_TOKENS`, `CHUNKING__STRATEGY`
 - `STORAGE__INDEX_DIR`, `STORAGE__UPLOAD_DIR`
 - `EMBEDDING__MODEL_NAME`
-- `ADAPTIVE_RAG_FAKE_EMBEDDER=1` — use deterministic fake embedder (tests)
+- `STORAGE__MAX_UPLOAD_BYTES` — PDF upload size limit (default 20MB)
+- `ADAPTIVE_RAG_FAKE_EMBEDDER=1` — use deterministic fake embedder (unit tests)
 - `ADAPTIVE_RAG_FAKE_RERANKER=1` — passthrough reranker for tests/eval
 - `ADAPTIVE_RAG_FAKE_LLM=1` — deterministic answer generator for tests/eval
 - `ANSWER_GENERATION__MAX_CONTEXT_TOKENS` — context window budget for answer prompts

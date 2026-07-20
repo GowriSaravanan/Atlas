@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from adaptive_rag.config.settings import AnswerGenerationSettings
+from adaptive_rag.domain.config.policy_config import AnswerGenerationPolicyConfig
 from adaptive_rag.domain.models.answer import BuiltContext
 from adaptive_rag.domain.models.retrieval import ScoredChunk
 from adaptive_rag.domain.policies.token_utils import estimate_token_count
@@ -11,8 +11,8 @@ from adaptive_rag.domain.policies.token_utils import estimate_token_count
 class ContextBuilder:
     """Select, order, and truncate reranked chunks into a context block."""
 
-    def __init__(self, settings: AnswerGenerationSettings) -> None:
-        self._max_context_tokens = settings.max_context_tokens
+    def __init__(self, config: AnswerGenerationPolicyConfig) -> None:
+        self._max_context_tokens = config.max_context_tokens
 
     def build(self, evidence: list[ScoredChunk]) -> BuiltContext:
         """Build a token-budgeted context block preserving chunk metadata."""

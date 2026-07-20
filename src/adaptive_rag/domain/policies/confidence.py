@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from adaptive_rag.config.settings import RetrievalSettings
+from adaptive_rag.domain.config.policy_config import ConfidenceWeightConfig, RetrievalPolicyConfig
 from adaptive_rag.domain.models.confidence import ConfidenceBreakdown, ConfidenceScore
 from adaptive_rag.domain.models.query import QueryAnalysis
 from adaptive_rag.domain.models.retrieval import ScoredChunk
@@ -11,12 +11,17 @@ from adaptive_rag.domain.models.retrieval import ScoredChunk
 class ConfidenceScorer:
     """Compute explainable retrieval confidence from hybrid results."""
 
-    def __init__(self, settings: RetrievalSettings) -> None:
-        self._threshold = settings.confidence_threshold
+    def __init__(
+        self,
+        *,
+        retrieval: RetrievalPolicyConfig,
+        weights: ConfidenceWeightConfig,
+    ) -> None:
+        self._threshold = retrieval.confidence_threshold
         self._weights = {
-            "retrieval_overlap": 0.4,
-            "reranker_score": 0.4,
-            "metadata_match": 0.2,
+            "retrieval_overlap": weights.retrieval_overlap,
+            "reranker_score": weights.reranker_score,
+            "metadata_match": weights.metadata_match,
         }
 
     def score(
