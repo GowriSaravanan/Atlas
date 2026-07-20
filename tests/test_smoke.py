@@ -6,7 +6,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from adaptive_rag.api.app import create_app
-from adaptive_rag.api.dependencies.container import reset_container
+from adaptive_rag.api.dependencies.container import get_container, reset_container
 from adaptive_rag.application.workflow.ingest_pipeline import compile_ingest_graph
 from adaptive_rag.application.workflow.query_graph import compile_query_graph
 from adaptive_rag.application.workflow.state import initial_ingest_state, initial_rag_state
@@ -73,13 +73,14 @@ def test_query_graph_compiles() -> None:
     assert result["conversation_id"] == "test"
 
 
-def test_ingest_graph_compiles() -> None:
+def test_ingest_graph_compiles(sample_pdf: Path) -> None:
     """Ingest workflow graph should compile and run."""
-    graph = compile_ingest_graph()
-    state = initial_ingest_state(source_path="/tmp/sample.pdf")
+    container = get_container()
+    graph = compile_ingest_graph(container.ingest_context)
+    state = initial_ingest_state(source_path=str(sample_pdf))
     result = graph.invoke(state)
     assert result["status"] == "completed"
-    assert result["source_path"] == "/tmp/sample.pdf"
+    assert result["chunk_count"] >= 1
 
 
 def test_health_endpoint(client: TestClient) -> None:

@@ -1,0 +1,25 @@
+{"id": "RT001", "query": "What is HR-203?", "expected_strategy": "bm25"}
+{"id": "RT002", "query": "What is HR-105?", "expected_strategy": "bm25"}
+{"id": "RT003", "query": "Lookup policy HR-203", "expected_strategy": "bm25"}
+{"id": "RT004", "query": "Find HR-105 policy code", "expected_strategy": "bm25"}
+{"id": "RT005", "query": "Show HR-203 details", "expected_strategy": "bm25"}
+{"id": "RT006", "query": "Policy identifier HR-105", "expected_strategy": "bm25"}
+{"id": "RT007", "query": "What is policy HR-203?", "expected_strategy": "bm25"}
+{"id": "RT008", "query": "Explain employee maternity leave benefits in detail", "expected_strategy": "hybrid"}
+{"id": "RT009", "query": "Compare HR-203 with HR-105", "expected_strategy": "hybrid"}
+{"id": "RT010", "query": "How many sick leave days are allowed?", "expected_strategy": "hybrid"}
+{"id": "RT011", "query": "What is the annual leave policy for new hires?", "expected_strategy": "hybrid"}
+{"id": "RT012", "query": "Compare maternity leave and paternity leave benefits.", "expected_strategy": "hybrid"}
+{"id": "RT013", "query": "Difference between HR-203 and HR-105", "expected_strategy": "hybrid"}
+{"id": "RT014", "query": "Explain paid paternity leave eligibility", "expected_strategy": "hybrid"}
+{"id": "RT015", "query": "Summarize HR leave handbook for employees", "expected_strategy": "hybrid"}
+{"id": "RT016", "query": "How do I apply for maternity leave?", "expected_strategy": "hybrid"}
+{"id": "RT017", "query": "Annual leave 20 days HR department", "expected_strategy": "hybrid"}
+{"id": "RT018", "query": "Compare sick leave and annual leave policies", "expected_strategy": "hybrid"}
+{"id": "RT019", "query": "What are maternity leave benefits for new parents?", "expected_strategy": "hybrid"}
+{"id": "RT020", "query": "HR leave policy overview for managers", "expected_strategy": "hybrid"}
+{"id": "RT021", "query": "Versus HR-203 and HR-105 leave allowances", "expected_strategy": "hybrid"}
+{"id": "RT022", "query": "Tell me about annual leave carry over rules", "expected_strategy": "hybrid"}
+{"id": "RT023", "query": "How many weeks of paternity leave?", "expected_strategy": "hybrid"}
+{"id": "RT024", "query": "Compare maternity leave versus paternity leave", "expected_strategy": "hybrid"}
+{"id": "RT025", "query": "What is the sick leave approval process?", "expected_strategy": "hybrid"}

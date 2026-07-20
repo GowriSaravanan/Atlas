@@ -8,6 +8,8 @@ from typing import Literal
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from adaptive_rag.domain.models.index import SparseBackend, VectorBackend
+
 
 class ConversationSettings(BaseSettings):
     """Conversation context configuration."""
@@ -63,6 +65,29 @@ class RerankerSettings(BaseSettings):
     batch_size: int = Field(default=16, ge=1, le=128)
 
 
+class VectorStoreSettings(BaseSettings):
+    """Vector store provider configuration."""
+
+    provider: VectorBackend = VectorBackend.FAISS
+    qdrant_url: str = "http://localhost:6333"
+    qdrant_api_key: str | None = None
+
+
+class SparseIndexSettings(BaseSettings):
+    """Sparse index provider configuration."""
+
+    provider: SparseBackend = SparseBackend.BM25
+
+
+class ChunkingSettings(BaseSettings):
+    """Adaptive chunking configuration."""
+
+    max_tokens: int = Field(default=512, ge=64, le=4096)
+    min_tokens: int = Field(default=64, ge=16, le=1024)
+    overlap_tokens: int = Field(default=50, ge=0, le=512)
+    strategy: Literal["structure_aware", "fixed"] = "structure_aware"
+
+
 class StorageSettings(BaseSettings):
     """Local storage paths for indices and uploads."""
 
@@ -99,6 +124,9 @@ class Settings(BaseSettings):
     confidence_weights: ConfidenceWeightSettings = Field(default_factory=ConfidenceWeightSettings)
     llm: LLMSettings = Field(default_factory=LLMSettings)
     embedding: EmbeddingSettings = Field(default_factory=EmbeddingSettings)
+    chunking: ChunkingSettings = Field(default_factory=ChunkingSettings)
+    vector_store: VectorStoreSettings = Field(default_factory=VectorStoreSettings)
+    sparse_index: SparseIndexSettings = Field(default_factory=SparseIndexSettings)
     reranker: RerankerSettings = Field(default_factory=RerankerSettings)
     storage: StorageSettings = Field(default_factory=StorageSettings)
     logging: LoggingSettings = Field(default_factory=LoggingSettings)

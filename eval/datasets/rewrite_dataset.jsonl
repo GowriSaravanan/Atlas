@@ -1,0 +1,20 @@
+{"id": "RW001", "query": "What about maternity leave?", "expected_rewrite": "What is the maternity leave policy?", "rewrite_type": "EXPANSION"}
+{"id": "RW002", "query": "How about paternity leave?", "expected_rewrite": "What is the paternity leave policy?", "rewrite_type": "EXPANSION"}
+{"id": "RW003", "query": "What is HR-203?", "expected_rewrite": "What is HR-203?", "rewrite_type": "PASS_THROUGH"}
+{"id": "RW004", "query": "Tell me about sick leave", "expected_rewrite": "What is the sick leave policy?", "rewrite_type": "EXPANSION"}
+{"id": "RW005", "query": "What about annual leave?", "expected_rewrite": "What is the annual leave policy?", "rewrite_type": "EXPANSION"}
+{"id": "RW006", "query": "How about HR-105?", "expected_rewrite": "What is HR-105?", "rewrite_type": "EXPANSION"}
+{"id": "RW007", "query": "Tell me about maternity leave policy", "expected_rewrite": "What is the maternity leave policy?", "rewrite_type": "EXPANSION"}
+{"id": "RW008", "query": "What about the handbook?", "expected_rewrite": "What is the handbook policy?", "rewrite_type": "EXPANSION"}
+{"id": "RW009", "query": "What is HR-105?", "expected_rewrite": "What is HR-105?", "rewrite_type": "PASS_THROUGH"}
+{"id": "RW010", "query": "How about sick leave policy?", "expected_rewrite": "What is the sick leave policy?", "rewrite_type": "EXPANSION"}
+{"id": "RW011", "query": "What about paternity leave benefits?", "expected_rewrite": "What is the paternity leave benefits?", "rewrite_type": "EXPANSION"}
+{"id": "RW012", "query": "Tell me about annual leave policy", "expected_rewrite": "What is the annual leave policy?", "rewrite_type": "EXPANSION"}
+{"id": "RW013", "query": "What about HR-203 policy?", "expected_rewrite": "What is the HR-203 policy?", "rewrite_type": "EXPANSION"}
+{"id": "RW014", "query": "How about maternity leave benefits?", "expected_rewrite": "What is the maternity leave benefits?", "rewrite_type": "EXPANSION"}
+{"id": "RW015", "query": "What is the sick leave policy?", "expected_rewrite": "What is the sick leave policy?", "rewrite_type": "PASS_THROUGH"}
+{"id": "RW016", "query": "Tell me about paternity leave", "expected_rewrite": "What is the paternity leave policy?", "rewrite_type": "EXPANSION"}
+{"id": "RW017", "query": "What about leave carry over?", "expected_rewrite": "What is the leave carry over policy?", "rewrite_type": "EXPANSION"}
+{"id": "RW018", "query": "How about the annual leave policy?", "expected_rewrite": "What is the annual leave policy?", "rewrite_type": "EXPANSION"}
+{"id": "RW019", "query": "What about HR leave handbook?", "expected_rewrite": "What is the HR leave handbook policy?", "rewrite_type": "EXPANSION"}
+{"id": "RW020", "query": "Tell me about HR-203", "expected_rewrite": "What is HR-203?", "rewrite_type": "EXPANSION"}

@@ -1,0 +1,10 @@
+{"id":"G001","category":"simple_lookup","query":"What is HR-203?","description":"Policy ID lookup should route to BM25"}
+{"id":"G002","category":"semantic_retrieval","query":"Explain paid leave benefits for new parents","description":"Semantic query should retrieve maternity/paternity content"}
+{"id":"G003","category":"comparison","query":"Compare maternity leave and paternity leave benefits.","description":"Comparison should decompose into two subqueries"}
+{"id":"G004","category":"follow_up_rewrite","query":"What about maternity leave?","description":"Follow-up should rewrite to standalone policy question"}
+{"id":"G005","category":"pronoun_resolution","query":"What about it?","context_messages":[{"role":"user","content":"Tell me about maternity leave policy"}],"description":"Pronoun follow-up should resolve from context"}
+{"id":"G006","category":"metadata_filtering","query":"HR sick leave policy","description":"Department-scoped retrieval"}
+{"id":"G007","category":"multi_hop_no_decompose","query":"What is the annual leave policy and how many days can I carry over?","description":"Compound single-topic query should not decompose"}
+{"id":"G008","category":"true_decomposition","query":"Difference between HR-203 and HR-105","description":"Policy comparison should split into two lookups"}
+{"id":"G009","category":"no_answer","query":"What is the vacation reimbursement policy in 2035?","description":"Out-of-corpus query should fail gracefully"}
+{"id":"G010","category":"ambiguous_query","query":"Tell me everything.","description":"Ambiguous query should not produce overconfident retrieval"}

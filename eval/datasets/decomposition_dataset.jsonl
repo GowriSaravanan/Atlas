@@ -1,0 +1,20 @@
+{"id": "D001", "query": "Compare maternity leave and paternity leave.", "should_decompose": true, "expected_subqueries": ["What is the maternity leave policy?", "What is the paternity leave policy?"]}
+{"id": "D002", "query": "Compare maternity leave and paternity leave benefits.", "should_decompose": true, "expected_subqueries": ["What is the maternity leave policy?", "What is the paternity leave policy?"]}
+{"id": "D003", "query": "What is the annual leave policy and how many days can I carry over?", "should_decompose": false}
+{"id": "D004", "query": "What is HR-203?", "should_decompose": false}
+{"id": "D005", "query": "Difference between HR-203 and HR-105", "should_decompose": true, "expected_subqueries": ["What is HR-203?", "What is HR-105?"]}
+{"id": "D006", "query": "Compare HR-203 with HR-105", "should_decompose": true, "expected_subqueries": ["What is HR-203?", "What is HR-105?"]}
+{"id": "D007", "query": "Compare sick leave and annual leave policies", "should_decompose": true, "expected_subqueries": ["What is the sick leave policy?", "What is the annual leave policy?"]}
+{"id": "D008", "query": "Versus maternity leave and paternity leave", "should_decompose": true, "expected_subqueries": ["What is the maternity leave policy?", "What is the paternity leave policy?"]}
+{"id": "D009", "query": "How many sick leave days can I take?", "should_decompose": false}
+{"id": "D010", "query": "Explain maternity leave eligibility requirements", "should_decompose": false}
+{"id": "D011", "query": "Compare HR-203 versus HR-105 leave allowances", "should_decompose": true, "expected_subqueries": ["What is HR-203?", "What is HR-105?"]}
+{"id": "D012", "query": "Annual leave policy and sick leave policy differences", "should_decompose": true, "expected_subqueries": ["What is the annual leave policy?", "What is the sick leave policy?"]}
+{"id": "D013", "query": "What is paternity leave?", "should_decompose": false}
+{"id": "D014", "query": "Both maternity leave and paternity leave benefits", "should_decompose": true, "expected_subqueries": ["What is the maternity leave policy?", "What is the paternity leave policy?"]}
+{"id": "D015", "query": "Annual leave carry over and sick leave approval process", "should_decompose": false}
+{"id": "D016", "query": "Compare maternity leave vs paternity leave", "should_decompose": true, "expected_subqueries": ["What is the maternity leave policy?", "What is the paternity leave policy?"]}
+{"id": "D017", "query": "HR-203 annual leave details", "should_decompose": false}
+{"id": "D018", "query": "Difference between sick leave and annual leave", "should_decompose": true, "expected_subqueries": ["What is the sick leave policy?", "What is the annual leave policy?"]}
+{"id": "D019", "query": "What is the HR leave handbook?", "should_decompose": false}
+{"id": "D020", "query": "Compare annual leave with sick leave benefits", "should_decompose": true, "expected_subqueries": ["What is the annual leave policy?", "What is the sick leave policy?"]}

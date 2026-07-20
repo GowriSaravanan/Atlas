@@ -48,6 +48,7 @@ data/
 indices/
 uploads/
 *.faiss
+eval/reports/**/data/
 
 # OS
 .DS_Store

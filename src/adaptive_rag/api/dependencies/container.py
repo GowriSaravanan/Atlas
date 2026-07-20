@@ -2,14 +2,29 @@
 
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass, field
+from pathlib import Path
+from typing import TYPE_CHECKING
 
+from adaptive_rag.application.use_cases.hybrid_retrieval import HybridRetrievalUseCase
 from adaptive_rag.application.use_cases.ingest_document import IngestDocumentUseCase
 from adaptive_rag.application.use_cases.query_rag import QueryRAGUseCase
 from adaptive_rag.application.use_cases.resolve_context import ResolveConversationContextUseCase
 from adaptive_rag.application.workflow.ingest_pipeline import compile_ingest_graph
+from adaptive_rag.application.workflow.nodes.ingest_nodes import IngestNodeContext
 from adaptive_rag.application.workflow.query_graph import compile_query_graph
 from adaptive_rag.config.settings import Settings, get_settings
+from adaptive_rag.domain.policies.adaptive_chunker import AdaptiveChunker
+from adaptive_rag.domain.policies.document_metadata_extractor import DocumentMetadataExtractor
+from adaptive_rag.domain.ports.embedder import EmbedderPort
+
+if TYPE_CHECKING:
+    from adaptive_rag.domain.ports.index_registry import IndexRegistryPort
+
+
+def _use_fake_embedder() -> bool:
+    return os.getenv("ADAPTIVE_RAG_FAKE_EMBEDDER", "").lower() in {"1", "true", "yes"}
 
 
 @dataclass
@@ -18,16 +33,80 @@ class Container:
 
     settings: Settings = field(default_factory=get_settings)
 
+    _embedder: EmbedderPort | None = field(default=None, repr=False)
+    _index_registry: IndexRegistryPort | None = field(default=None, repr=False)
+    _ingest_context: IngestNodeContext | None = field(default=None, repr=False)
+
     # Compiled graphs (singletons)
     _query_graph: object | None = field(default=None, repr=False)
     _ingest_graph: object | None = field(default=None, repr=False)
 
     # Use cases
     _query_rag_use_case: QueryRAGUseCase | None = field(default=None, repr=False)
+    _retrieval_engine: object | None = field(default=None, repr=False)
+    _hybrid_retriever: object | None = field(default=None, repr=False)
+    _hybrid_retrieval_use_case: HybridRetrievalUseCase | None = field(default=None, repr=False)
     _ingest_document_use_case: IngestDocumentUseCase | None = field(default=None, repr=False)
     _resolve_context_use_case: ResolveConversationContextUseCase | None = field(
         default=None, repr=False
     )
+
+    def ensure_storage_dirs(self) -> None:
+        """Create configured storage directories."""
+        for path in (
+            self.settings.storage.data_dir,
+            self.settings.storage.index_dir,
+            self.settings.storage.upload_dir,
+        ):
+            Path(path).mkdir(parents=True, exist_ok=True)
+
+    @property
+    def embedder(self) -> EmbedderPort:
+        if self._embedder is None:
+            if _use_fake_embedder():
+                from adaptive_rag.infrastructure.embeddings.fake_embedder import FakeEmbedder
+
+                self._embedder = FakeEmbedder()
+            else:
+                from adaptive_rag.infrastructure.embeddings.sentence_transformer import (
+                    SentenceTransformerEmbedder,
+                )
+
+                self._embedder = SentenceTransformerEmbedder(self.settings.embedding)
+        return self._embedder
+
+    @property
+    def index_registry(self) -> IndexRegistryPort:
+        if self._index_registry is None:
+            from adaptive_rag.infrastructure.factories import (
+                build_sparse_retriever_factory,
+                build_vector_store_factory,
+            )
+            from adaptive_rag.infrastructure.storage.collection_index import CollectionIndexRegistry
+
+            self.ensure_storage_dirs()
+            self._index_registry = CollectionIndexRegistry(
+                base_path=Path(self.settings.storage.index_dir),
+                embedder=self.embedder,
+                vector_store_factory=build_vector_store_factory(self.settings),
+                sparse_retriever_factory=build_sparse_retriever_factory(self.settings),
+                vector_backend=self.settings.vector_store.provider,
+                sparse_backend=self.settings.sparse_index.provider,
+            )
+        return self._index_registry
+
+    @property
+    def ingest_context(self) -> IngestNodeContext:
+        if self._ingest_context is None:
+            from adaptive_rag.infrastructure.pdf.pymupdf_loader import PyMuPDFLoader
+
+            self._ingest_context = IngestNodeContext(
+                document_loader=PyMuPDFLoader(),
+                metadata_extractor=DocumentMetadataExtractor(),
+                chunker=AdaptiveChunker(self.settings.chunking),
+                index_registry=self.index_registry,
+            )
+        return self._ingest_context
 
     @property
     def query_graph(self):
@@ -40,7 +119,7 @@ class Container:
     def ingest_graph(self):
         """Return compiled ingest workflow graph."""
         if self._ingest_graph is None:
-            self._ingest_graph = compile_ingest_graph()
+            self._ingest_graph = compile_ingest_graph(self.ingest_context)
         return self._ingest_graph
 
     @property
@@ -51,10 +130,44 @@ class Container:
         return self._query_rag_use_case
 
     @property
+    def hybrid_retriever(self):
+        if self._hybrid_retriever is None:
+            from adaptive_rag.application.services.hybrid_retriever import HybridRetriever
+            from adaptive_rag.domain.policies.rrf import ReciprocalRankFusion
+
+            self._hybrid_retriever = HybridRetriever(
+                index_registry=self.index_registry,
+                fusion_engine=ReciprocalRankFusion(self.settings.retrieval),
+                settings=self.settings.retrieval,
+            )
+        return self._hybrid_retriever
+
+    @property
+    def retrieval_engine(self):
+        if self._retrieval_engine is None:
+            from adaptive_rag.application.services.retrieval_engine import RetrievalEngine
+            from adaptive_rag.domain.policies.rrf import ReciprocalRankFusion
+
+            fusion_engine = ReciprocalRankFusion(self.settings.retrieval)
+            self._retrieval_engine = RetrievalEngine(
+                index_registry=self.index_registry,
+                hybrid_retriever=self.hybrid_retriever,
+                settings=self.settings.retrieval,
+                fusion_engine=fusion_engine,
+            )
+        return self._retrieval_engine
+
+    @property
+    def hybrid_retrieval_use_case(self) -> HybridRetrievalUseCase:
+        if self._hybrid_retrieval_use_case is None:
+            self._hybrid_retrieval_use_case = HybridRetrievalUseCase(self.retrieval_engine)
+        return self._hybrid_retrieval_use_case
+
+    @property
     def ingest_document_use_case(self) -> IngestDocumentUseCase:
         """Return ingest document use case."""
         if self._ingest_document_use_case is None:
-            self._ingest_document_use_case = IngestDocumentUseCase()
+            self._ingest_document_use_case = IngestDocumentUseCase(self.ingest_graph)
         return self._ingest_document_use_case
 
     @property

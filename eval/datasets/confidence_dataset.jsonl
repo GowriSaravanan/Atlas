@@ -1,0 +1,15 @@
+{"id": "C001", "query": "What is HR-203?", "expected_confidence": "high", "gold": [{"policy_id": "HR-203"}]}
+{"id": "C002", "query": "Explain maternity leave eligibility", "expected_confidence": "high", "gold": [{"section_title": "Maternity Leave"}]}
+{"id": "C003", "query": "What is the vacation reimbursement policy in 2035?", "expected_confidence": "low", "gold": [{"content_contains": "vacation reimbursement 2035"}]}
+{"id": "C004", "query": "Tell me everything about HR.", "expected_confidence": "medium", "gold": [{"content_contains": "nonexistent topic"}]}
+{"id": "C005", "query": "What is HR-105?", "expected_confidence": "high", "gold": [{"policy_id": "HR-105"}]}
+{"id": "C006", "query": "paternity leave weeks", "expected_confidence": "high", "gold": [{"section_title": "Paternity Leave"}]}
+{"id": "C007", "query": "What is the Mars colony leave policy?", "expected_confidence": "low", "gold": [{"content_contains": "Mars colony"}]}
+{"id": "C008", "query": "annual leave 20 days", "expected_confidence": "high", "gold": [{"policy_id": "HR-203"}]}
+{"id": "C009", "query": "Explain all HR policies in detail", "expected_confidence": "medium", "gold": [{"section_title": "HR Leave Policy Handbook"}]}
+{"id": "C010", "query": "sick leave manager approval", "expected_confidence": "high", "gold": [{"policy_id": "HR-105"}]}
+{"id": "C011", "query": "nonexistent benefit code ZX-999", "expected_confidence": "low", "gold": [{"content_contains": "ZX-999"}]}
+{"id": "C012", "query": "26 weeks maternity leave", "expected_confidence": "high", "gold": [{"section_title": "Maternity Leave"}]}
+{"id": "C013", "query": "Compare every policy in the company", "expected_confidence": "medium", "gold": [{"content_contains": "every policy in the company"}]}
+{"id": "C014", "query": "HR leave handbook overview", "expected_confidence": "high", "gold": [{"section_title": "HR Leave Policy Handbook"}]}
+{"id": "C015", "query": "What is unlimited sabbatical leave?", "expected_confidence": "low", "gold": [{"content_contains": "unlimited sabbatical"}]}

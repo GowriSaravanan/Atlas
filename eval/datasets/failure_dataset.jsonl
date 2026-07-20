@@ -1,0 +1,15 @@
+{"id": "F001", "query": "What is the vacation reimbursement policy in 2035?", "expected_behavior": "no_evidence", "gold": [{"content_contains": "vacation reimbursement 2035"}]}
+{"id": "F002", "query": "Tell me everything about HR policies.", "expected_behavior": "low_confidence", "gold": [{"content_contains": "nonexistent topic"}]}
+{"id": "F003", "query": "What about it?", "expected_behavior": "rewrite_or_clarify", "context_messages": [{"role": "user", "content": "Tell me about maternity leave policy"}]}
+{"id": "F004", "query": "What is the annual leave policy and how many days can I carry over?", "expected_behavior": "no_false_decomposition"}
+{"id": "F005", "query": "What is the Mars remote work leave policy?", "expected_behavior": "no_evidence", "gold": [{"content_contains": "Mars remote work"}]}
+{"id": "F006", "query": "Tell me everything.", "expected_behavior": "rewrite_or_clarify"}
+{"id": "F007", "query": "What about that policy?", "expected_behavior": "rewrite_or_clarify"}
+{"id": "F008", "query": "ZX-999 compliance policy details", "expected_behavior": "no_evidence", "gold": [{"content_contains": "ZX-999"}]}
+{"id": "F009", "query": "Summarize all corporate policies globally", "expected_behavior": "low_confidence", "gold": [{"content_contains": "corporate policies globally"}]}
+{"id": "F010", "query": "What is the 2035 sabbatical extension policy?", "expected_behavior": "no_evidence", "gold": [{"content_contains": "2035 sabbatical"}]}
+{"id": "F011", "query": "Hi there", "expected_behavior": "rewrite_or_clarify"}
+{"id": "F012", "query": "What about it?", "expected_behavior": "rewrite_or_clarify", "context_messages": [{"role": "user", "content": "Explain paternity leave policy"}]}
+{"id": "F013", "query": "Universal unlimited leave worldwide", "expected_behavior": "no_evidence", "gold": [{"content_contains": "Universal unlimited leave"}]}
+{"id": "F014", "query": "Compare every HR policy ever written", "expected_behavior": "low_confidence", "gold": [{"content_contains": "every HR policy ever"}]}
+{"id": "F015", "query": "What is the fantasy leave policy?", "expected_behavior": "no_evidence", "gold": [{"content_contains": "fantasy leave"}]}

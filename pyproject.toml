@@ -5,12 +5,20 @@ description = "Production-quality Adaptive Hybrid RAG Platform with LangGraph or
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "faiss-cpu==1.8.0",
     "fastapi>=0.139.2",
     "httpx>=0.28.1",
     "langchain-core>=1.4.9",
     "langgraph>=1.2.9",
+    "numpy<2",
     "pydantic>=2.13.4",
     "pydantic-settings>=2.14.2",
+    "pymupdf>=1.28.0",
+    "python-multipart>=0.0.32",
+    "rank-bm25>=0.2.2",
+    "sentence-transformers==3.4.1",
+    "torch==2.2.2",
+    "transformers==4.46.3",
     "uvicorn[standard]>=0.51.0",
 ]
 
@@ -29,8 +37,11 @@ dev = [
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = ["src"]
+pythonpath = ["src", "."]
 asyncio_mode = "auto"
+markers = [
+    "integration: integration tests that run the full eval pipeline",
+]
 
 [tool.uv]
 package = true

@@ -2,14 +2,14 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 
 from pydantic import BaseModel, Field
 
 from adaptive_rag.domain.models.confidence import ConfidenceBreakdown, ConfidenceScore
 from adaptive_rag.domain.models.grounding import CitationReport, GroundingReport, GuardDecision
-from adaptive_rag.domain.models.query import QueryAnalysis
+from adaptive_rag.domain.models.query import OriginalQueryAnalysis, QueryAnalysis, ResolvedQueryAnalysis
 from adaptive_rag.domain.models.retrieval import RetrievalStrategy, ScoredChunk, SearchScope
 
 
@@ -17,7 +17,7 @@ class StepTrace(BaseModel):
     """Trace record for a single pipeline step."""
 
     step: str
-    started_at: datetime = Field(default_factory=datetime.utcnow)
+    started_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     duration_ms: float = 0.0
     metadata: dict[str, Any] = Field(default_factory=dict)
 
@@ -28,7 +28,8 @@ class RetrievalTrace(BaseModel):
     query_id: str = ""
     raw_query: str = ""
     resolved_query: str | None = None
-    analysis: QueryAnalysis | None = None
+    original_analysis: OriginalQueryAnalysis | None = None
+    resolved_analysis: ResolvedQueryAnalysis | None = None
     search_scope: SearchScope | None = None
     strategy: RetrievalStrategy | None = None
     dense_hits: list[ScoredChunk] = Field(default_factory=list)

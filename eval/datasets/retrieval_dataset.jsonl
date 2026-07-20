@@ -1,0 +1,25 @@
+{"id": "R001", "query": "What is HR-203?", "expected_strategy": "bm25", "gold": [{"policy_id": "HR-203"}], "top_k": 5}
+{"id": "R002", "query": "What is HR-105?", "expected_strategy": "bm25", "gold": [{"policy_id": "HR-105"}], "top_k": 5}
+{"id": "R003", "query": "Explain employee maternity leave benefits", "expected_strategy": "hybrid", "gold": [{"section_title": "Maternity Leave"}], "top_k": 5}
+{"id": "R004", "query": "How many sick leave days are allowed?", "expected_strategy": "hybrid", "gold": [{"policy_id": "HR-105"}], "top_k": 5}
+{"id": "R005", "query": "paternity leave weeks", "expected_strategy": "dense", "gold": [{"section_title": "Paternity Leave"}], "top_k": 5}
+{"id": "R006", "query": "annual leave 20 days HR department", "expected_strategy": "hybrid", "gold": [{"policy_id": "HR-203"}], "top_k": 5}
+{"id": "R007", "query": "26 weeks maternity paid leave", "expected_strategy": "hybrid", "gold": [{"section_title": "Maternity Leave"}], "top_k": 5}
+{"id": "R008", "query": "2 weeks paternity leave paid", "expected_strategy": "hybrid", "gold": [{"section_title": "Paternity Leave"}], "top_k": 5}
+{"id": "R009", "query": "HR leave policy handbook summary", "expected_strategy": "hybrid", "gold": [{"section_title": "HR Leave Policy Handbook"}], "top_k": 5}
+{"id": "R010", "query": "Policy HR-203 grants annual leave", "expected_strategy": "bm25", "gold": [{"policy_id": "HR-203"}], "top_k": 5}
+{"id": "R011", "query": "10 sick leave days manager approval", "expected_strategy": "hybrid", "gold": [{"policy_id": "HR-105"}], "top_k": 5}
+{"id": "R012", "query": "full-time HR employees annual leave", "expected_strategy": "hybrid", "gold": [{"content_contains": "20 days"}], "top_k": 5}
+{"id": "R013", "query": "eligible employees maternity leave", "expected_strategy": "hybrid", "gold": [{"section_title": "Maternity Leave"}], "top_k": 5}
+{"id": "R014", "query": "eligible employees paternity leave", "expected_strategy": "hybrid", "gold": [{"section_title": "Paternity Leave"}], "top_k": 5}
+{"id": "R015", "query": "What is HR-203 annual leave days?", "expected_strategy": "bm25", "gold": [{"policy_id": "HR-203"}], "top_k": 5}
+{"id": "R016", "query": "sick leave HR-105", "expected_strategy": "bm25", "gold": [{"policy_id": "HR-105"}], "top_k": 5}
+{"id": "R017", "query": "maternity leave policy HR", "expected_strategy": "hybrid", "gold": [{"section_title": "Maternity Leave"}], "top_k": 5}
+{"id": "R018", "query": "paternity leave policy HR", "expected_strategy": "hybrid", "gold": [{"section_title": "Paternity Leave"}], "top_k": 5}
+{"id": "R019", "query": "handbook summarizes HR leave policies", "expected_strategy": "hybrid", "gold": [{"section_title": "HR Leave Policy Handbook"}], "top_k": 5}
+{"id": "R020", "query": "manager approval sick leave", "expected_strategy": "hybrid", "gold": [{"policy_id": "HR-105"}], "top_k": 5}
+{"id": "R021", "query": "20 days annual leave per year", "expected_strategy": "hybrid", "gold": [{"policy_id": "HR-203"}], "top_k": 5}
+{"id": "R022", "query": "paid maternity leave weeks", "expected_strategy": "hybrid", "gold": [{"section_title": "Maternity Leave"}], "top_k": 5}
+{"id": "R023", "query": "paid paternity leave weeks", "expected_strategy": "hybrid", "gold": [{"section_title": "Paternity Leave"}], "top_k": 5}
+{"id": "R024", "query": "HR-203 policy full-time employees", "expected_strategy": "bm25", "gold": [{"policy_id": "HR-203"}], "top_k": 5}
+{"id": "R025", "query": "HR-105 policy sick days", "expected_strategy": "bm25", "gold": [{"policy_id": "HR-105"}], "top_k": 5}

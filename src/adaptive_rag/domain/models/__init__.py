@@ -2,6 +2,13 @@
 
 from adaptive_rag.domain.models.confidence import ConfidenceBreakdown, ConfidenceScore
 from adaptive_rag.domain.models.conversation import Message, MessageRole
+from adaptive_rag.domain.models.decomposition import (
+    DecompositionResult,
+    SubQuery,
+    SubQueryResult,
+    SubQueryRetrievalPlan,
+    SubQuerySource,
+)
 from adaptive_rag.domain.models.document import Chunk, Document
 from adaptive_rag.domain.models.grounding import (
     AnswerMode,
@@ -13,7 +20,30 @@ from adaptive_rag.domain.models.grounding import (
     GuardDecision,
     GuardResult,
 )
-from adaptive_rag.domain.models.query import ComplexityLevel, QueryAnalysis, QueryIntent
+from adaptive_rag.domain.models.index import (
+    CollectionStats,
+    FilterStrategy,
+    IndexMetadata,
+    SparseBackend,
+    SparseRetrieverCapabilities,
+    VectorBackend,
+    VectorQuery,
+    VectorRecord,
+    VectorStoreCapabilities,
+)
+from adaptive_rag.domain.models.query import (
+    ComplexityLevel,
+    DecompositionDecision,
+    QueryAnalysis,
+    QueryIntent,
+    QueryType,
+    OriginalQueryAnalysis,
+    ResolvedQueryAnalysis,
+    EffectiveQueryAnalysis,
+    RetrievalDecision,
+    RewriteDecision,
+    RewriteResult,
+)
 from adaptive_rag.domain.models.retrieval import (
     RetrievalStrategy,
     ScoredChunk,
@@ -30,22 +60,43 @@ __all__ = [
     "CitationReport",
     "CitationValidation",
     "ClaimSupport",
+    "CollectionStats",
     "ComplexityLevel",
     "ConfidenceBreakdown",
     "ConfidenceScore",
+    "DecompositionDecision",
+    "DecompositionResult",
     "Document",
+    "FilterStrategy",
     "GroundingReport",
     "GuardDecision",
     "GuardResult",
+    "IndexMetadata",
     "Message",
     "MessageRole",
     "QueryAnalysis",
     "QueryIntent",
-    "RetrievalStrategy",
+    "QueryType",
+    "OriginalQueryAnalysis",
+    "ResolvedQueryAnalysis",
+    "EffectiveQueryAnalysis",
+    "RewriteDecision",
+    "RewriteResult",
+    "RetrievalDecision",
     "RetrievalTrace",
     "ScoredChunk",
     "SearchScope",
+    "SparseBackend",
+    "SparseRetrieverCapabilities",
     "StepTrace",
+    "SubQuery",
+    "SubQueryResult",
+    "SubQueryRetrievalPlan",
+    "SubQuerySource",
     "SubqueryState",
     "SubquerySummary",
+    "VectorBackend",
+    "VectorQuery",
+    "VectorRecord",
+    "VectorStoreCapabilities",
 ]

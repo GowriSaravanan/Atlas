@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any, Literal, TypedDict
 
 from adaptive_rag.domain.models.confidence import ConfidenceScore
+from adaptive_rag.domain.models.document import Chunk, Document
 from adaptive_rag.domain.models.conversation import Message
 from adaptive_rag.domain.models.grounding import Citation
 from adaptive_rag.domain.models.query import QueryAnalysis
@@ -72,6 +73,8 @@ class IngestGraphState(TypedDict, total=False):
     source_path: str
     collection_id: str
     document_id: str | None
+    document: Document | None
+    chunks: list[Chunk]
     chunk_count: int
     status: Literal["pending", "completed", "failed"]
     error: str | None
@@ -112,6 +115,8 @@ def initial_ingest_state(*, source_path: str, collection_id: str = "default") ->
         source_path=source_path,
         collection_id=collection_id,
         document_id=None,
+        document=None,
+        chunks=[],
         chunk_count=0,
         status="pending",
         error=None,

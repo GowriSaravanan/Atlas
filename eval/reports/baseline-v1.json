@@ -1,0 +1,625 @@
+{
+  "generated_at": "2026-07-20T18:27:10.217615+00:00",
+  "instrumentation_complete": true,
+  "phase_5_readiness": {
+    "rewrite_accuracy_measured": true,
+    "router_accuracy_measured": true,
+    "decomposition_accuracy_measured": true,
+    "recall_at_k_measured": true,
+    "mrr_measured": true,
+    "false_decomposition_rate_measured": true,
+    "latency_per_stage_measured": true,
+    "failure_cases_evaluated": true,
+    "confidence_evaluated": true
+  },
+  "quality_gates": {
+    "rewrite_exact_match_rate_gte_0_75": true,
+    "router_accuracy_gte_0_80": false,
+    "recall_at_k_gte_0_70": false,
+    "mrr_gte_0_50": false,
+    "false_decomposition_rate_lte_0_10": true,
+    "failure_pass_rate_gte_0_75": true
+  },
+  "ready_for_phase_5": false,
+  "sections": {
+    "rewrite": {
+      "cases": [
+        {
+          "id": "RW001",
+          "exact_match": true,
+          "rewrite_type": "EXPANSION",
+          "expected_rewrite": "What is the maternity leave policy?",
+          "actual_rewrite": "What is the maternity leave policy?"
+        },
+        {
+          "id": "RW002",
+          "exact_match": true,
+          "rewrite_type": "EXPANSION",
+          "expected_rewrite": "What is the paternity leave policy?",
+          "actual_rewrite": "What is the paternity leave policy?"
+        },
+        {
+          "id": "RW003",
+          "exact_match": true,
+          "rewrite_type": "PASS_THROUGH",
+          "expected_rewrite": "What is HR-203?",
+          "actual_rewrite": "What is HR-203?"
+        },
+        {
+          "id": "RW004",
+          "exact_match": true,
+          "rewrite_type": "EXPANSION",
+          "expected_rewrite": "What is the sick leave policy?",
+          "actual_rewrite": "What is the sick leave policy?"
+        }
+      ],
+      "summary": {
+        "count": 4,
+        "exact_match_rate": 1.0,
+        "exact_matches": 4
+      }
+    },
+    "routing": {
+      "cases": [
+        {
+          "id": "RT001",
+          "expected_strategy": "bm25",
+          "actual_strategy": "bm25",
+          "correct": true,
+          "reason": "Policy identifier detected; keyword lookup favors BM25"
+        },
+        {
+          "id": "RT002",
+          "expected_strategy": "hybrid",
+          "actual_strategy": "dense",
+          "correct": false,
+          "reason": "Simple factual query; semantic dense retrieval selected"
+        },
+        {
+          "id": "RT003",
+          "expected_strategy": "hybrid",
+          "actual_strategy": "bm25",
+          "correct": false,
+          "reason": "Policy identifier detected; keyword lookup favors BM25"
+        },
+        {
+          "id": "RT004",
+          "expected_strategy": "hybrid",
+          "actual_strategy": "dense",
+          "correct": false,
+          "reason": "Simple factual query; semantic dense retrieval selected"
+        },
+        {
+          "id": "RT005",
+          "expected_strategy": "hybrid",
+          "actual_strategy": "dense",
+          "correct": false,
+          "reason": "Simple factual query; semantic dense retrieval selected"
+        }
+      ],
+      "summary": {
+        "count": 5,
+        "router_accuracy": 0.2,
+        "correct": 1
+      }
+    },
+    "decomposition": {
+      "cases": [
+        {
+          "id": "D001",
+          "should_decompose": true,
+          "was_decomposed": true,
+          "false_decomposition": false,
+          "missed_decomposition": false,
+          "decision_correct": true,
+          "subquery_exact_match": true,
+          "expected_subqueries": [
+            "What is the maternity leave policy?",
+            "What is the paternity leave policy?"
+          ],
+          "actual_subqueries": [
+            "What is the maternity leave policy?",
+            "What is the paternity leave policy?"
+          ]
+        },
+        {
+          "id": "D002",
+          "should_decompose": true,
+          "was_decomposed": true,
+          "false_decomposition": false,
+          "missed_decomposition": false,
+          "decision_correct": true,
+          "subquery_exact_match": true,
+          "expected_subqueries": [
+            "What is the maternity leave policy?",
+            "What is the paternity leave policy?"
+          ],
+          "actual_subqueries": [
+            "What is the maternity leave policy?",
+            "What is the paternity leave policy?"
+          ]
+        },
+        {
+          "id": "D003",
+          "should_decompose": false,
+          "was_decomposed": false,
+          "false_decomposition": false,
+          "missed_decomposition": false,
+          "decision_correct": true,
+          "subquery_exact_match": true,
+          "expected_subqueries": [],
+          "actual_subqueries": [
+            "What is the annual leave policy and how many days can I carry over?"
+          ]
+        },
+        {
+          "id": "D004",
+          "should_decompose": false,
+          "was_decomposed": false,
+          "false_decomposition": false,
+          "missed_decomposition": false,
+          "decision_correct": true,
+          "subquery_exact_match": true,
+          "expected_subqueries": [],
+          "actual_subqueries": [
+            "What is HR-203?"
+          ]
+        },
+        {
+          "id": "D005",
+          "should_decompose": true,
+          "was_decomposed": false,
+          "false_decomposition": false,
+          "missed_decomposition": true,
+          "decision_correct": false,
+          "subquery_exact_match": false,
+          "expected_subqueries": [
+            "What is HR-203?",
+            "What is HR-105?"
+          ],
+          "actual_subqueries": [
+            "Difference between HR-203 and HR-105"
+          ]
+        }
+      ],
+      "summary": {
+        "count": 5,
+        "precision": 1.0,
+        "recall": 0.6667,
+        "false_decomposition_rate": 0.0,
+        "subquery_exact_match_rate": 0.8,
+        "decision_accuracy": 0.8,
+        "true_positive": 2,
+        "false_positive": 0,
+        "false_negative": 1
+      }
+    },
+    "retrieval": {
+      "cases": [
+        {
+          "id": "R001",
+          "recall_at_k": 0.0,
+          "mrr": 0.0,
+          "ndcg_at_k": 0.0,
+          "strategy_match": true,
+          "expected_strategy": "bm25",
+          "actual_strategy": "bm25",
+          "gold_hits_in_results": 0,
+          "gold_count": 3
+        },
+        {
+          "id": "R002",
+          "recall_at_k": 0.0,
+          "mrr": 0.0,
+          "ndcg_at_k": 0.0,
+          "strategy_match": false,
+          "expected_strategy": "hybrid",
+          "actual_strategy": "dense",
+          "gold_hits_in_results": 0,
+          "gold_count": 3
+        },
+        {
+          "id": "R003",
+          "recall_at_k": 0.0,
+          "mrr": 0.0,
+          "ndcg_at_k": 0.0,
+          "strategy_match": false,
+          "expected_strategy": "hybrid",
+          "actual_strategy": "dense",
+          "gold_hits_in_results": 0,
+          "gold_count": 3
+        },
+        {
+          "id": "R004",
+          "recall_at_k": 0.6666666666666666,
+          "mrr": 0.5,
+          "ndcg_at_k": 0.49818925746641285,
+          "strategy_match": true,
+          "expected_strategy": "hybrid",
+          "actual_strategy": "hybrid",
+          "gold_hits_in_results": 2,
+          "gold_count": 3
+        },
+        {
+          "id": "R005",
+          "recall_at_k": 1.0,
+          "mrr": 1.0,
+          "ndcg_at_k": 1.0,
+          "strategy_match": true,
+          "expected_strategy": "dense",
+          "actual_strategy": "dense",
+          "gold_hits_in_results": 3,
+          "gold_count": 3
+        }
+      ],
+      "summary": {
+        "count": 5,
+        "recall_at_k": 0.3333,
+        "mrr": 0.3,
+        "ndcg_at_k": 0.2996,
+        "router_accuracy": 0.6
+      }
+    },
+    "confidence": {
+      "cases": [
+        {
+          "id": "C001",
+          "expected_confidence": "high",
+          "predicted_bucket": "low",
+          "actual_value": 0.0,
+          "bucket_match": false,
+          "retrieval_success": false,
+          "success_alignment": false
+        },
+        {
+          "id": "C002",
+          "expected_confidence": "high",
+          "predicted_bucket": "low",
+          "actual_value": 0.2375,
+          "bucket_match": false,
+          "retrieval_success": true,
+          "success_alignment": true
+        },
+        {
+          "id": "C003",
+          "expected_confidence": "low",
+          "predicted_bucket": "low",
+          "actual_value": 0.0,
+          "bucket_match": true,
+          "retrieval_success": false,
+          "success_alignment": true
+        },
+        {
+          "id": "C004",
+          "expected_confidence": "medium",
+          "predicted_bucket": "low",
+          "actual_value": 0.2066,
+          "bucket_match": false,
+          "retrieval_success": true,
+          "success_alignment": true
+        }
+      ],
+      "summary": {
+        "count": 4,
+        "bucket_match_rate": 0.25,
+        "success_alignment_rate": 0.75
+      }
+    },
+    "failure": {
+      "cases": [
+        {
+          "id": "F001",
+          "expected_behavior": "no_evidence",
+          "passed": true,
+          "result_count": 0,
+          "confidence_value": 0.0,
+          "confidence_acceptable": false,
+          "was_rewritten": false,
+          "query_type": "factual"
+        },
+        {
+          "id": "F002",
+          "expected_behavior": "low_confidence",
+          "passed": true,
+          "result_count": 5,
+          "confidence_value": 0.3843,
+          "confidence_acceptable": false,
+          "was_rewritten": false,
+          "query_type": "factual"
+        },
+        {
+          "id": "F003",
+          "expected_behavior": "rewrite_or_clarify",
+          "passed": true,
+          "result_count": 0,
+          "confidence_value": 0.0,
+          "confidence_acceptable": false,
+          "was_rewritten": true,
+          "query_type": "factual"
+        },
+        {
+          "id": "F004",
+          "expected_behavior": "no_false_decomposition",
+          "passed": true,
+          "result_count": 5,
+          "confidence_value": 0.2066,
+          "confidence_acceptable": false,
+          "was_rewritten": false,
+          "query_type": "factual"
+        }
+      ],
+      "summary": {
+        "count": 4,
+        "pass_rate": 1.0,
+        "passed": 4
+      }
+    },
+    "golden_demo": {
+      "demos": [
+        {
+          "id": "G001",
+          "category": "simple_lookup",
+          "description": "Policy ID lookup should route to BM25",
+          "query": "What is HR-203?",
+          "resolved_query": "What is HR-203?",
+          "strategy": "bm25",
+          "decomposed": false,
+          "subqueries": [
+            "What is HR-203?"
+          ],
+          "confidence": 0.0,
+          "result_count": 0,
+          "trace_steps": [
+            "original_query_analysis",
+            "query_rewrite",
+            "query_decomposition",
+            "subquery_retrieval_0",
+            "subquery_merge",
+            "confidence_scoring"
+          ]
+        },
+        {
+          "id": "G002",
+          "category": "semantic_retrieval",
+          "description": "Semantic query should retrieve maternity/paternity content",
+          "query": "Explain paid leave benefits for new parents",
+          "resolved_query": "Explain paid leave benefits for new parents",
+          "strategy": "dense",
+          "decomposed": false,
+          "subqueries": [
+            "Explain paid leave benefits for new parents"
+          ],
+          "confidence": 0.2,
+          "result_count": 5,
+          "trace_steps": [
+            "original_query_analysis",
+            "query_rewrite",
+            "query_decomposition",
+            "subquery_retrieval_0",
+            "subquery_merge",
+            "confidence_scoring"
+          ]
+        },
+        {
+          "id": "G003",
+          "category": "comparison",
+          "description": "Comparison should decompose into two subqueries",
+          "query": "Compare maternity leave and paternity leave benefits.",
+          "resolved_query": "Compare maternity leave and paternity leave benefits.",
+          "strategy": "dense",
+          "decomposed": true,
+          "subqueries": [
+            "What is the maternity leave policy?",
+            "What is the paternity leave policy?"
+          ],
+          "confidence": 0.2228,
+          "result_count": 3,
+          "trace_steps": [
+            "original_query_analysis",
+            "query_rewrite",
+            "query_decomposition",
+            "subquery_retrieval_A",
+            "subquery_retrieval_B",
+            "subquery_merge",
+            "confidence_scoring"
+          ]
+        },
+        {
+          "id": "G004",
+          "category": "follow_up_rewrite",
+          "description": "Follow-up should rewrite to standalone policy question",
+          "query": "What about maternity leave?",
+          "resolved_query": "What is the maternity leave policy?",
+          "strategy": "dense",
+          "decomposed": false,
+          "subqueries": [
+            "What is the maternity leave policy?"
+          ],
+          "confidence": 0.2304,
+          "result_count": 5,
+          "trace_steps": [
+            "original_query_analysis",
+            "query_rewrite",
+            "resolved_query_analysis",
+            "query_decomposition",
+            "subquery_retrieval_0",
+            "subquery_merge",
+            "confidence_scoring"
+          ]
+        },
+        {
+          "id": "G005",
+          "category": "pronoun_resolution",
+          "description": "Pronoun follow-up should resolve from context",
+          "query": "What about it?",
+          "resolved_query": "What is the IT Tell me about maternity leave policy policy?",
+          "strategy": "hybrid",
+          "decomposed": false,
+          "subqueries": [
+            "What is the IT Tell me about maternity leave policy policy?"
+          ],
+          "confidence": 0.0,
+          "result_count": 0,
+          "trace_steps": [
+            "original_query_analysis",
+            "query_rewrite",
+            "resolved_query_analysis",
+            "query_decomposition",
+            "subquery_retrieval_0",
+            "subquery_merge",
+            "confidence_scoring"
+          ]
+        },
+        {
+          "id": "G006",
+          "category": "metadata_filtering",
+          "description": "Department-scoped retrieval",
+          "query": "HR sick leave policy",
+          "resolved_query": "HR sick leave policy",
+          "strategy": "hybrid",
+          "decomposed": false,
+          "subqueries": [
+            "HR sick leave policy"
+          ],
+          "confidence": 0.2066,
+          "result_count": 5,
+          "trace_steps": [
+            "original_query_analysis",
+            "query_rewrite",
+            "query_decomposition",
+            "subquery_retrieval_0",
+            "subquery_merge",
+            "confidence_scoring"
+          ]
+        },
+        {
+          "id": "G007",
+          "category": "multi_hop_no_decompose",
+          "description": "Compound single-topic query should not decompose",
+          "query": "What is the annual leave policy and how many days can I carry over?",
+          "resolved_query": "What is the annual leave policy and how many days can I carry over?",
+          "strategy": "hybrid",
+          "decomposed": false,
+          "subqueries": [
+            "What is the annual leave policy and how many days can I carry over?"
+          ],
+          "confidence": 0.2066,
+          "result_count": 5,
+          "trace_steps": [
+            "original_query_analysis",
+            "query_rewrite",
+            "query_decomposition",
+            "subquery_retrieval_0",
+            "subquery_merge",
+            "confidence_scoring"
+          ]
+        },
+        {
+          "id": "G008",
+          "category": "true_decomposition",
+          "description": "Policy comparison should split into two lookups",
+          "query": "Difference between HR-203 and HR-105",
+          "resolved_query": "Difference between HR-203 and HR-105",
+          "strategy": "bm25",
+          "decomposed": false,
+          "subqueries": [
+            "Difference between HR-203 and HR-105"
+          ],
+          "confidence": 0.0,
+          "result_count": 0,
+          "trace_steps": [
+            "original_query_analysis",
+            "query_rewrite",
+            "query_decomposition",
+            "subquery_retrieval_0",
+            "subquery_merge",
+            "confidence_scoring"
+          ]
+        },
+        {
+          "id": "G009",
+          "category": "no_answer",
+          "description": "Out-of-corpus query should fail gracefully",
+          "query": "What is the vacation reimbursement policy in 2035?",
+          "resolved_query": "What is the vacation reimbursement policy in 2035?",
+          "strategy": "hybrid",
+          "decomposed": false,
+          "subqueries": [
+            "What is the vacation reimbursement policy in 2035?"
+          ],
+          "confidence": 0.0,
+          "result_count": 0,
+          "trace_steps": [
+            "original_query_analysis",
+            "query_rewrite",
+            "query_decomposition",
+            "subquery_retrieval_0",
+            "subquery_merge",
+            "confidence_scoring"
+          ]
+        },
+        {
+          "id": "G010",
+          "category": "ambiguous_query",
+          "description": "Ambiguous query should not produce overconfident retrieval",
+          "query": "Tell me everything.",
+          "resolved_query": "Tell me everything.",
+          "strategy": "dense",
+          "decomposed": false,
+          "subqueries": [
+            "Tell me everything."
+          ],
+          "confidence": 0.2136,
+          "result_count": 5,
+          "trace_steps": [
+            "original_query_analysis",
+            "query_rewrite",
+            "query_decomposition",
+            "subquery_retrieval_0",
+            "subquery_merge",
+            "confidence_scoring"
+          ]
+        }
+      ],
+      "count": 10
+    },
+    "latency": {
+      "analysis": {
+        "avg_ms": 0.13,
+        "p95_ms": 0.33,
+        "p99_ms": 1.42,
+        "samples": 52
+      },
+      "confidence": {
+        "avg_ms": 0.0,
+        "p95_ms": 0.0,
+        "p99_ms": 0.0,
+        "samples": 23
+      },
+      "decomposition": {
+        "avg_ms": 0.0,
+        "p95_ms": 0.0,
+        "p99_ms": 0.0,
+        "samples": 23
+      },
+      "merge": {
+        "avg_ms": 0.0,
+        "p95_ms": 0.0,
+        "p99_ms": 0.0,
+        "samples": 23
+      },
+      "retrieval": {
+        "avg_ms": 0.71,
+        "p95_ms": 1.49,
+        "p99_ms": 11.4,
+        "samples": 69
+      },
+      "rewrite": {
+        "avg_ms": 0.0,
+        "p95_ms": 0.0,
+        "p99_ms": 0.0,
+        "samples": 23
+      }
+    }
+  }
+}

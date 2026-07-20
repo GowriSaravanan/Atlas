@@ -8,7 +8,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from adaptive_rag.api.dependencies.container import get_container
-from adaptive_rag.api.routes import health, query
+from adaptive_rag.api.routes import health, ingest, query, retrieval
 from adaptive_rag.config.settings import get_settings
 from adaptive_rag.observability.logging import get_logger, setup_logging
 
@@ -21,6 +21,7 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
     settings = get_settings()
     setup_logging(settings.logging)
     container = get_container()
+    container.ensure_storage_dirs()
     logger.info(
         "Starting %s v%s",
         settings.app_name,
@@ -43,6 +44,8 @@ def create_app() -> FastAPI:
     )
     app.include_router(health.router)
     app.include_router(query.router, prefix="/api/v1")
+    app.include_router(ingest.router, prefix="/api/v1")
+    app.include_router(retrieval.router, prefix="/api/v1")
     return app
 
 
