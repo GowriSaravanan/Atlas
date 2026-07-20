@@ -12,6 +12,7 @@ import pytest
 def _test_environment(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     """Configure isolated temp storage and fake embedder for tests."""
     monkeypatch.setenv("ADAPTIVE_RAG_FAKE_EMBEDDER", "1")
+    monkeypatch.setenv("ADAPTIVE_RAG_FAKE_RERANKER", "1")
     monkeypatch.setenv("STORAGE__DATA_DIR", str(tmp_path / "data"))
     monkeypatch.setenv("STORAGE__INDEX_DIR", str(tmp_path / "data" / "indices"))
     monkeypatch.setenv("STORAGE__UPLOAD_DIR", str(tmp_path / "data" / "uploads"))

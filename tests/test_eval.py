@@ -9,6 +9,7 @@ import pytest
 
 from eval.metrics.decomposition import evaluate_decomposition_case, summarize_decomposition
 from eval.metrics.latency import summarize_latency
+from eval.metrics.rerank import evaluate_rerank_case, summarize_rerank
 from eval.metrics.retrieval import evaluate_retrieval_case, mrr, recall_at_k
 from eval.metrics.rewrite import evaluate_rewrite_case, summarize_rewrite
 from eval.metrics.routing import evaluate_routing_case, summarize_routing
@@ -85,6 +86,53 @@ def test_latency_summary() -> None:
     assert summary["analysis"]["avg_ms"] == 8.0
     assert summary["rewrite"]["avg_ms"] == 2.0
     assert summary["retrieval"]["avg_ms"] == 48.0
+
+
+def test_rerank_before_after_metrics() -> None:
+    catalog = [
+        ("c1", "Policy HR-203 grants annual leave", {"section_title": "Policy HR-203: Annual Leave"}),
+        ("c2", "Policy HR-105 sick leave", {"section_title": "Policy HR-105: Sick Leave"}),
+    ]
+    case = evaluate_rerank_case(
+        case_id="RR001",
+        pre_rerank_ids=["c2", "c1"],
+        post_rerank_ids=["c1", "c2"],
+        catalog=catalog,
+        gold_specs=[{"policy_id": "HR-203"}],
+        top_k=2,
+        rerank_ms=12.5,
+    )
+    assert case["pre_mrr"] == 0.5
+    assert case["post_mrr"] == 1.0
+    assert case["mrr_delta"] == 0.5
+    assert case["rank_changed"] is True
+
+
+def test_rerank_summary() -> None:
+    cases = [
+        evaluate_rerank_case(
+            case_id="RR001",
+            pre_rerank_ids=["c2", "c1"],
+            post_rerank_ids=["c1", "c2"],
+            catalog=[("c1", "gold", {}), ("c2", "other", {})],
+            gold_specs=[{"content_contains": "gold"}],
+            top_k=2,
+            rerank_ms=10.0,
+        ),
+        evaluate_rerank_case(
+            case_id="RR002",
+            pre_rerank_ids=["c1", "c2"],
+            post_rerank_ids=["c1", "c2"],
+            catalog=[("c1", "gold", {}), ("c2", "other", {})],
+            gold_specs=[{"content_contains": "gold"}],
+            top_k=2,
+            rerank_ms=20.0,
+        ),
+    ]
+    summary = summarize_rerank(cases)
+    assert summary["count"] == 2
+    assert summary["mrr_delta"] == 0.25
+    assert summary["avg_rerank_ms"] == 15.0
 
 
 def test_retrieval_case_uses_catalog() -> None:

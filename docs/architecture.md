@@ -68,6 +68,7 @@ sequenceDiagram
     participant Router as AdaptiveRouter
     participant Scope as MetadataScopeBuilder
     participant Retriever as HybridRetriever
+    participant Reranker as RerankerPort
     participant Confidence as ConfidenceScorer
     participant Index as IndexRegistryPort
 
@@ -89,7 +90,9 @@ sequenceDiagram
     Retriever->>Index: search_dense / search_sparse
     Index-->>Retriever: ScoredChunks
     Retriever-->>Engine: HybridRetrievalResult
-    Engine->>Confidence: score(result, analysis)
+    Engine->>Reranker: rerank(query, merged_candidates)
+    Reranker-->>Engine: reranked ScoredChunks
+    Engine->>Confidence: score(reranked_results, analysis)
     Confidence-->>Engine: ConfidenceScore
     Engine-->>API: RetrievalEngineResult
     API-->>Client: JSON + trace
@@ -124,6 +127,7 @@ src/adaptive_rag/
 │   ├── vector_store/    # FAISS adapter + factory
 │   ├── sparse/          # BM25 adapter + factory
 │   ├── embeddings/      # Sentence Transformers
+│   ├── reranking/       # Cross-encoder reranker + fake adapter
 │   └── storage/         # CollectionIndexRegistry
 ├── api/                 # FastAPI app, routes, DI container
 ├── config/              # Pydantic Settings
@@ -140,9 +144,10 @@ src/adaptive_rag/
 | **1** | ✅ | PDF ingestion, adaptive chunking, FAISS + BM25 indexing |
 | **2** | ✅ | Hybrid retrieval, RRF fusion, retrieval API |
 | **3** | ✅ | Query analysis, adaptive router, metadata scope, confidence, `QueryType` taxonomy |
-| **4A** | 🔜 | Query rewriting (conditional) |
-| **4B** | 🔜 | Query decomposition (conservative, parallel retrieval) |
-| **5** | 🔜 | Cross-encoder reranking, answer generation, citations |
+| **4A** | ✅ | Query rewriting (conditional) |
+| **4B** | ✅ | Query decomposition (conservative, sequential retrieval) |
+| **5A** | ✅ | Cross-encoder reranking (`RerankerPort`, post-merge, pre-confidence) |
+| **5B** | 🔜 | Answer generation, citations |
 | **6** | 🔜 | Hallucination guard, grounding validation |
 | **7** | 🔜 | RAGAS evaluation, LLM-as-Judge, observability |
 | **8** | 🔜 | Explainability dashboard, Docker deployment |
@@ -302,6 +307,36 @@ Decomposition is **conservative** — compound questions about a single policy a
 
 ---
 
+## Phase 5A — Cross-Encoder Reranking
+
+Reranking sits **after hybrid retrieval merge** and **before aggregate confidence scoring** (ADR-006).
+
+```mermaid
+flowchart LR
+    Merge["Subquery merge"] --> Rerank["CrossEncoderReranker"]
+    Rerank --> Confidence["ConfidenceScorer"]
+```
+
+| Component | Location | Role |
+|---|---|---|
+| `RerankerPort` | `domain/ports/reranker.py` | Rerank contract |
+| `CrossEncoderReranker` | `infrastructure/reranking/cross_encoder.py` | Production adapter |
+| `FakeReranker` | `infrastructure/reranking/fake_reranker.py` | Test/eval passthrough |
+| Pipeline hook | `RetrievalEngine.execute()` | Merge → rerank → confidence |
+| Trace | `RetrievalTrace.reranked_hits` + `step=rerank` | Before/after IDs + latency |
+
+Configuration:
+
+```bash
+RERANKER__MODEL_NAME=cross-encoder/ms-marco-MiniLM-L-6-v2
+RETRIEVAL__RERANK_TOP_K=5
+ADAPTIVE_RAG_FAKE_RERANKER=1  # tests/eval only — preserves v1.0 retrieval gates
+```
+
+Eval adds a dedicated `rerank` suite measuring Recall@k/MRR before vs after reranking and rerank latency, without modifying existing retrieval datasets.
+
+---
+
 Copy `.env.example` to `.env`. Key settings:
 
 ```bash
@@ -310,6 +345,7 @@ SPARSE_INDEX__PROVIDER=bm25
 RETRIEVAL__CONFIDENCE_THRESHOLD=0.65
 RETRIEVAL__RRF_K=60
 ADAPTIVE_RAG_FAKE_EMBEDDER=1  # tests only
+ADAPTIVE_RAG_FAKE_RERANKER=1  # tests/eval only
 ```
 
 ---

@@ -24,6 +24,7 @@ from eval.metrics.decomposition import evaluate_decomposition_case, summarize_de
 from eval.metrics.failure import evaluate_failure_case, summarize_failure
 from eval.metrics.latency import summarize_latency
 from eval.metrics.report import build_summary_report
+from eval.metrics.rerank import evaluate_rerank_case, summarize_rerank
 from eval.metrics.retrieval import evaluate_retrieval_case, summarize_retrieval
 from eval.metrics.rewrite import evaluate_rewrite_case, summarize_rewrite
 from eval.metrics.routing import evaluate_routing_case, summarize_routing
@@ -55,6 +56,7 @@ def load_jsonl(path: Path) -> list[dict[str, Any]]:
 def configure_eval_environment(output_dir: Path) -> None:
     """Configure isolated storage and fake embedder for reproducible eval."""
     os.environ["ADAPTIVE_RAG_FAKE_EMBEDDER"] = "1"
+    os.environ["ADAPTIVE_RAG_FAKE_RERANKER"] = "1"
     os.environ["STORAGE__DATA_DIR"] = str(output_dir / "data")
     os.environ["STORAGE__INDEX_DIR"] = str(output_dir / "data" / "indices")
     os.environ["STORAGE__UPLOAD_DIR"] = str(output_dir / "data" / "uploads")
@@ -189,6 +191,37 @@ class EvaluationRunner:
             )
         return {"cases": cases, "summary": summarize_retrieval(cases)}
 
+    def run_rerank_eval(self) -> dict[str, Any]:
+        cases = []
+        for row in load_jsonl(DATASETS_DIR / "retrieval_dataset.jsonl"):
+            top_k = row.get("top_k", 5)
+            result = self.container.hybrid_retrieval_use_case.execute(
+                query=row["query"],
+                collection_id=self.collection_id,
+                top_k=top_k,
+            )
+            self.latency_traces.append(trace_payload(result))
+            rerank_step = next(
+                (step for step in result.trace.steps if step.step == "rerank"),
+                None,
+            )
+            metadata = rerank_step.metadata if rerank_step else {}
+            pre_rerank_ids = list(metadata.get("pre_rerank_ids", []))
+            post_rerank_ids = [hit.chunk.id for hit in result.results]
+            rerank_ms = rerank_step.duration_ms if rerank_step else 0.0
+            cases.append(
+                evaluate_rerank_case(
+                    case_id=row["id"],
+                    pre_rerank_ids=pre_rerank_ids,
+                    post_rerank_ids=post_rerank_ids,
+                    catalog=self.catalog,
+                    gold_specs=row.get("gold", []),
+                    top_k=top_k,
+                    rerank_ms=rerank_ms,
+                )
+            )
+        return {"cases": cases, "summary": summarize_rerank(cases)}
+
     def run_confidence_eval(self) -> dict[str, Any]:
         cases = []
         for row in load_jsonl(DATASETS_DIR / "confidence_dataset.jsonl"):
@@ -293,6 +326,7 @@ class EvaluationRunner:
             "routing": self.run_routing_eval(),
             "decomposition": self.run_decomposition_eval(),
             "retrieval": self.run_retrieval_eval(),
+            "rerank": self.run_rerank_eval(),
             "confidence": self.run_confidence_eval(),
             "failure": self.run_failure_eval(),
             "golden_demo": self.run_golden_demo(),
@@ -339,6 +373,22 @@ def write_report(report: dict[str, Any], output_path: Path) -> None:
                 f"- Recall@k: {summary.get('recall_at_k')}",
                 f"- MRR: {summary.get('mrr')}",
                 f"- nDCG@k: {summary.get('ndcg_at_k')}",
+                "",
+            ]
+        )
+    if "rerank" in sections:
+        summary = sections["rerank"]["summary"]
+        lines.extend(
+            [
+                "## Rerank",
+                "",
+                f"- Pre-rerank Recall@k: {summary.get('pre_recall_at_k')}",
+                f"- Post-rerank Recall@k: {summary.get('post_recall_at_k')}",
+                f"- Recall delta: {summary.get('recall_delta')}",
+                f"- Pre-rerank MRR: {summary.get('pre_mrr')}",
+                f"- Post-rerank MRR: {summary.get('post_mrr')}",
+                f"- MRR delta: {summary.get('mrr_delta')}",
+                f"- Avg rerank latency: {summary.get('avg_rerank_ms')}ms",
                 "",
             ]
         )
@@ -389,7 +439,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Run Adaptive Retrieval Platform evaluation benchmarks.")
     parser.add_argument(
         "--suite",
-        choices=["all", "rewrite", "routing", "decomposition", "retrieval", "confidence", "failure", "golden", "latency"],
+        choices=["all", "rewrite", "routing", "decomposition", "retrieval", "rerank", "confidence", "failure", "golden", "latency"],
         default="all",
     )
     parser.add_argument(
@@ -416,6 +466,7 @@ def main() -> int:
             "routing": "run_routing_eval",
             "decomposition": "run_decomposition_eval",
             "retrieval": "run_retrieval_eval",
+            "rerank": "run_rerank_eval",
             "confidence": "run_confidence_eval",
             "failure": "run_failure_eval",
             "golden": "run_golden_demo",

@@ -21,10 +21,15 @@ from adaptive_rag.domain.ports.embedder import EmbedderPort
 
 if TYPE_CHECKING:
     from adaptive_rag.domain.ports.index_registry import IndexRegistryPort
+    from adaptive_rag.domain.ports.reranker import RerankerPort
 
 
 def _use_fake_embedder() -> bool:
     return os.getenv("ADAPTIVE_RAG_FAKE_EMBEDDER", "").lower() in {"1", "true", "yes"}
+
+
+def _use_fake_reranker() -> bool:
+    return os.getenv("ADAPTIVE_RAG_FAKE_RERANKER", "").lower() in {"1", "true", "yes"}
 
 
 @dataclass
@@ -34,6 +39,7 @@ class Container:
     settings: Settings = field(default_factory=get_settings)
 
     _embedder: EmbedderPort | None = field(default=None, repr=False)
+    _reranker: RerankerPort | None = field(default=None, repr=False)
     _index_registry: IndexRegistryPort | None = field(default=None, repr=False)
     _ingest_context: IngestNodeContext | None = field(default=None, repr=False)
 
@@ -74,6 +80,19 @@ class Container:
 
                 self._embedder = SentenceTransformerEmbedder(self.settings.embedding)
         return self._embedder
+
+    @property
+    def reranker(self) -> RerankerPort:
+        if self._reranker is None:
+            if _use_fake_reranker():
+                from adaptive_rag.infrastructure.reranking.fake_reranker import FakeReranker
+
+                self._reranker = FakeReranker()
+            else:
+                from adaptive_rag.infrastructure.reranking.cross_encoder import CrossEncoderReranker
+
+                self._reranker = CrossEncoderReranker(self.settings.reranker)
+        return self._reranker
 
     @property
     def index_registry(self) -> IndexRegistryPort:
@@ -154,6 +173,7 @@ class Container:
                 hybrid_retriever=self.hybrid_retriever,
                 settings=self.settings.retrieval,
                 fusion_engine=fusion_engine,
+                reranker=self.reranker,
             )
         return self._retrieval_engine
 

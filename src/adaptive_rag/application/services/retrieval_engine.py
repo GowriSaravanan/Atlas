@@ -36,6 +36,7 @@ from adaptive_rag.domain.ports.fusion_engine import FusionEnginePort
 from adaptive_rag.domain.ports.index_registry import IndexRegistryPort
 from adaptive_rag.domain.ports.query_decomposer import QueryDecomposerPort
 from adaptive_rag.domain.ports.query_rewriter import QueryRewriterPort
+from adaptive_rag.domain.ports.reranker import RerankerPort
 from adaptive_rag.observability.logging import get_logger
 
 logger = get_logger(__name__)
@@ -59,6 +60,7 @@ class RetrievalEngine:
         confidence_scorer: ConfidenceScorer | None = None,
         top_k_allocator: TopKAllocator | None = None,
         result_merger: SubqueryResultMerger | None = None,
+        reranker: RerankerPort | None = None,
     ) -> None:
         self._index_registry = index_registry
         self._hybrid_retriever = hybrid_retriever
@@ -71,6 +73,7 @@ class RetrievalEngine:
         self._confidence_scorer = confidence_scorer or ConfidenceScorer(settings)
         self._top_k_allocator = top_k_allocator or TopKAllocator()
         self._result_merger = result_merger or SubqueryResultMerger(fusion_engine)
+        self._reranker = reranker
 
     def execute(
         self,
@@ -128,6 +131,32 @@ class RetrievalEngine:
             top_k=total_top_k,
             parent_query=retrieval_query,
         )
+        pre_rerank_results = list(merged_results)
+        rerank_ms = 0.0
+        rerank_metadata: dict[str, object] = {
+            "input_count": len(pre_rerank_results),
+            "output_count": len(pre_rerank_results),
+            "pre_rerank_ids": [hit.chunk.id for hit in pre_rerank_results],
+            "post_rerank_ids": [hit.chunk.id for hit in pre_rerank_results],
+            "skipped": self._reranker is None,
+        }
+        if self._reranker is not None and pre_rerank_results:
+            start = time.perf_counter()
+            merged_results = self._reranker.rerank(
+                retrieval_query,
+                pre_rerank_results,
+                top_k=self._settings.rerank_top_k,
+            )
+            rerank_ms = (time.perf_counter() - start) * 1000
+            rerank_metadata = {
+                "input_count": len(pre_rerank_results),
+                "output_count": len(merged_results),
+                "pre_rerank_ids": [hit.chunk.id for hit in pre_rerank_results],
+                "post_rerank_ids": [hit.chunk.id for hit in merged_results],
+                "skipped": False,
+                "top_k": self._settings.rerank_top_k,
+            }
+
         decision = self._build_aggregate_decision(subquery_results, explicit_strategy=strategy)
         confidence = self._aggregate_confidence(subquery_results, resolved_analysis, merged_results)
 
@@ -157,9 +186,12 @@ class RetrievalEngine:
             dense_hits=dense_hits,
             sparse_hits=sparse_hits,
             fused_hits=fused_hits,
+            reranked_hits=merged_results,
             retrieval_confidence=confidence,
             latency_ms={"original_analyze_ms": original_analyze_ms},
         )
+        if rerank_ms > 0.0:
+            trace.latency_ms["rerank_ms"] = rerank_ms
         if rewrite_result.was_rewritten:
             trace.latency_ms["resolved_analyze_ms"] = resolved_analyze_ms
         for subquery_result in subquery_results:
@@ -178,7 +210,9 @@ class RetrievalEngine:
             subquery_results=subquery_results,
             decision=decision,
             confidence=confidence,
-            merged_count=len(merged_results),
+            merged_count=len(pre_rerank_results),
+            rerank_ms=rerank_ms,
+            rerank_metadata=rerank_metadata,
         )
 
         logger.info(
@@ -386,6 +420,8 @@ class RetrievalEngine:
         decision: RetrievalDecision,
         confidence: ConfidenceScore,
         merged_count: int,
+        rerank_ms: float = 0.0,
+        rerank_metadata: dict[str, object] | None = None,
     ) -> None:
         trace.steps.append(
             StepTrace(
@@ -466,6 +502,14 @@ class RetrievalEngine:
                 metadata={"merged_hits": merged_count, "aggregate_strategy": decision.strategy.value},
             )
         )
+        if rerank_metadata is not None:
+            trace.steps.append(
+                StepTrace(
+                    step="rerank",
+                    duration_ms=rerank_ms,
+                    metadata=rerank_metadata,
+                )
+            )
         trace.steps.append(
             StepTrace(
                 step="confidence_scoring",

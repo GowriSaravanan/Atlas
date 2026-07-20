@@ -42,6 +42,7 @@ def build_summary_report(sections: dict[str, Any]) -> dict[str, Any]:
         "latency_per_stage_measured": bool(sections.get("latency")),
         "failure_cases_evaluated": "failure" in sections,
         "confidence_evaluated": "confidence" in sections,
+        "rerank_lift_measured": "rerank" in sections,
     }
     quality_gates = _quality_gates(sections)
     return {

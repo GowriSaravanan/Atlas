@@ -92,7 +92,8 @@ def test_bm25_only_strategy(indexed_collection: str) -> None:
     assert len(result.sparse_hits) >= 1
     assert result.dense_hits == []
     assert result.fused_hits == []
-    assert result.results == result.sparse_hits
+    assert [hit.chunk.id for hit in result.results] == [hit.chunk.id for hit in result.sparse_hits]
+    assert all(hit.source == "reranker" for hit in result.results)
 
 
 def test_dense_only_strategy(indexed_collection: str) -> None:
@@ -107,7 +108,8 @@ def test_dense_only_strategy(indexed_collection: str) -> None:
     assert len(result.dense_hits) >= 1
     assert result.sparse_hits == []
     assert result.fused_hits == []
-    assert result.results == result.dense_hits
+    assert [hit.chunk.id for hit in result.results] == [hit.chunk.id for hit in result.dense_hits]
+    assert all(hit.source == "reranker" for hit in result.results)
 
 
 def test_retrieve_endpoint(client: TestClient, indexed_collection: str) -> None:
