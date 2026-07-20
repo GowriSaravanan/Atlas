@@ -34,7 +34,9 @@ def test_settings_load_with_defaults() -> None:
     assert settings.app_name == "Adaptive Hybrid RAG Platform"
     assert settings.conversation.max_turns == 5
     assert settings.retrieval.confidence_threshold == 0.65
-    assert settings.llm.provider == "ollama"
+    assert settings.llm.provider == "openrouter"
+    assert settings.embedding.model_name == "BAAI/bge-base-en-v1.5"
+    assert settings.reranker.model_name == "BAAI/bge-reranker-base"
 
 
 def test_search_scope_model() -> None:

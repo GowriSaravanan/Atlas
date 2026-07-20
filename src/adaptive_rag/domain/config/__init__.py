@@ -3,6 +3,7 @@
 from adaptive_rag.domain.config.policy_config import (
     AnswerGenerationPolicyConfig,
     ChunkingPolicyConfig,
+    CitationFormatterPolicyConfig,
     ConfidenceWeightConfig,
     FusionPolicyConfig,
     RetrievalPolicyConfig,
@@ -11,6 +12,7 @@ from adaptive_rag.domain.config.policy_config import (
 __all__ = [
     "AnswerGenerationPolicyConfig",
     "ChunkingPolicyConfig",
+    "CitationFormatterPolicyConfig",
     "ConfidenceWeightConfig",
     "FusionPolicyConfig",
     "RetrievalPolicyConfig",

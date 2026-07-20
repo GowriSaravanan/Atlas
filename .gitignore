@@ -54,3 +54,10 @@ eval/reports/latest-run/
 # OS
 .DS_Store
 Thumbs.db
+
+# Generated evaluation outputs
+eval/reports/latest*
+eval/reports/run/
+eval/reports/production-run/
+eval/reports/after-fix/
+eval/reports/verify/

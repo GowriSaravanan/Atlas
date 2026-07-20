@@ -7,6 +7,7 @@ from pathlib import Path
 from adaptive_rag.config.settings import (
     AnswerGenerationSettings,
     ChunkingSettings,
+    CitationSettings,
     ConfidenceWeightSettings,
     RetrievalSettings,
     Settings,
@@ -14,6 +15,7 @@ from adaptive_rag.config.settings import (
 from adaptive_rag.domain.config.policy_config import (
     AnswerGenerationPolicyConfig,
     ChunkingPolicyConfig,
+    CitationFormatterPolicyConfig,
     ConfidenceWeightConfig,
     FusionPolicyConfig,
     RetrievalPolicyConfig,
@@ -51,6 +53,12 @@ def to_answer_generation_policy_config(
     settings: AnswerGenerationSettings,
 ) -> AnswerGenerationPolicyConfig:
     return AnswerGenerationPolicyConfig(max_context_tokens=settings.max_context_tokens)
+
+
+def to_citation_formatter_policy_config(
+    settings: CitationSettings,
+) -> CitationFormatterPolicyConfig:
+    return CitationFormatterPolicyConfig(excerpt_max_chars=settings.excerpt_max_chars)
 
 
 def resolve_prompts_dir(settings: Settings) -> Path:

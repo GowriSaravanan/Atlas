@@ -46,3 +46,10 @@ class AnswerGenerationPolicyConfig:
     """Answer-generation context assembly parameters."""
 
     max_context_tokens: int
+
+
+@dataclass(frozen=True)
+class CitationFormatterPolicyConfig:
+    """Citation formatting parameters."""
+
+    excerpt_max_chars: int

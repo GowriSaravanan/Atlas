@@ -1,6 +1,7 @@
 """Domain models public API."""
 
 from adaptive_rag.domain.models.answer import BuiltContext, GeneratedAnswer
+from adaptive_rag.domain.models.citation import Citation, CitationFormats
 from adaptive_rag.domain.models.confidence import ConfidenceBreakdown, ConfidenceScore
 from adaptive_rag.domain.models.conversation import Message, MessageRole
 from adaptive_rag.domain.models.decomposition import (
@@ -13,7 +14,6 @@ from adaptive_rag.domain.models.decomposition import (
 from adaptive_rag.domain.models.document import Chunk, Document
 from adaptive_rag.domain.models.grounding import (
     AnswerMode,
-    Citation,
     CitationReport,
     CitationValidation,
     ClaimSupport,
@@ -59,6 +59,7 @@ __all__ = [
     "BuiltContext",
     "Chunk",
     "Citation",
+    "CitationFormats",
     "CitationReport",
     "CitationValidation",
     "ClaimSupport",

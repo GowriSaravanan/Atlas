@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
+import os
 from functools import lru_cache
-from typing import Literal
+from typing import Any, Literal
 
-from pydantic import Field
+from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from adaptive_rag.domain.models.index import SparseBackend, VectorBackend
@@ -45,30 +46,38 @@ class AnswerGenerationSettings(BaseSettings):
     prompts_dir: str = "prompts"
 
 
+class CitationSettings(BaseSettings):
+    """Citation formatting configuration."""
+
+    excerpt_max_chars: int = Field(default=200, ge=50, le=2000)
+
+
 class LLMSettings(BaseSettings):
     """LLM provider configuration."""
 
-    provider: Literal["openai", "gemini", "groq", "ollama"] = "ollama"
-    model: str = "llama3"
+    provider: Literal["openai", "gemini", "groq", "ollama", "openrouter"] = "openrouter"
+    model: str = "meta-llama/llama-3.1-8b-instruct"
     temperature: float = Field(default=0.0, ge=0.0, le=2.0)
     max_tokens: int = Field(default=2048, ge=256, le=16384)
     openai_api_key: str | None = None
     gemini_api_key: str | None = None
     groq_api_key: str | None = None
+    openrouter_api_key: str | None = None
+    openrouter_app_title: str = "Adaptive Hybrid RAG Platform"
     ollama_base_url: str = "http://localhost:11434"
 
 
 class EmbeddingSettings(BaseSettings):
     """Embedding model configuration."""
 
-    model_name: str = "sentence-transformers/all-MiniLM-L6-v2"
+    model_name: str = "BAAI/bge-base-en-v1.5"
     batch_size: int = Field(default=32, ge=1, le=256)
 
 
 class RerankerSettings(BaseSettings):
     """Cross-encoder reranker configuration."""
 
-    model_name: str = "cross-encoder/ms-marco-MiniLM-L-6-v2"
+    model_name: str = "BAAI/bge-reranker-base"
     batch_size: int = Field(default=16, ge=1, le=128)
 
 
@@ -136,8 +145,45 @@ class Settings(BaseSettings):
     sparse_index: SparseIndexSettings = Field(default_factory=SparseIndexSettings)
     reranker: RerankerSettings = Field(default_factory=RerankerSettings)
     answer_generation: AnswerGenerationSettings = Field(default_factory=AnswerGenerationSettings)
+    citation: CitationSettings = Field(default_factory=CitationSettings)
     storage: StorageSettings = Field(default_factory=StorageSettings)
     logging: LoggingSettings = Field(default_factory=LoggingSettings)
+
+    @model_validator(mode="before")
+    @classmethod
+    def apply_flat_env_aliases(cls, data: Any) -> Any:
+        """Map top-level production env vars onto nested settings."""
+        payload = dict(data or {})
+
+        def lookup(name: str) -> str | None:
+            env_value = os.getenv(name)
+            if env_value:
+                return env_value
+            raw = payload.get(name)
+            return raw if isinstance(raw, str) and raw else None
+
+        embedding = dict(payload.get("embedding") or {})
+        if embedding_model := lookup("EMBEDDING_MODEL"):
+            embedding["model_name"] = embedding_model
+        if embedding:
+            payload["embedding"] = embedding
+
+        reranker = dict(payload.get("reranker") or {})
+        if reranker_model := lookup("RERANKER_MODEL"):
+            reranker["model_name"] = reranker_model
+        if reranker:
+            payload["reranker"] = reranker
+
+        llm = dict(payload.get("llm") or {})
+        if openrouter_api_key := lookup("OPENROUTER_API_KEY"):
+            llm["openrouter_api_key"] = openrouter_api_key
+        if openrouter_model := lookup("OPENROUTER_MODEL"):
+            llm["model"] = openrouter_model
+            llm["provider"] = "openrouter"
+        if llm:
+            payload["llm"] = llm
+
+        return payload
 
 
 @lru_cache

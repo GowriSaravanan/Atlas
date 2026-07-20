@@ -13,6 +13,8 @@ eval/
     decomposition_dataset.jsonl
     confidence_dataset.jsonl
     failure_dataset.jsonl
+    answer_generation_dataset.jsonl
+    citation_dataset.jsonl
     golden_demo.jsonl
   fixtures/
     corpus.py          # deterministic eval PDF
@@ -50,6 +52,9 @@ uv run python eval/run_eval.py --report eval/reports/latest.json
 | Confidence | Bucket match vs high/medium/low |
 | Failure | Pass rate for no-evidence / low-confidence / clarify cases |
 | Latency | avg, p95, p99 per pipeline stage |
+| Rerank | Pre/post Recall@k, MRR delta, rerank latency |
+| Answer generation | Generation success, groundedness, latency, tokens |
+| Citation | Coverage, precision, missing/invalid citation rate, order preserved |
 | Golden demo | 10 interview-ready traces |
 
 ## Phase 5 Readiness Checklist
@@ -65,6 +70,7 @@ The report includes:
 - latency per stage measured
 - failure cases evaluated
 - confidence evaluated
+- citation formatting evaluated
 
 All must be **yes** (instrumentation complete) before treating benchmarks as operational.
 

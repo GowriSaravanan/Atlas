@@ -7,6 +7,8 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
+from adaptive_rag.domain.models.citation import Citation
+
 
 class GuardDecision(str, Enum):
     """Action decided by the hallucination guard."""
@@ -55,15 +57,6 @@ class AnswerMode(str, Enum):
     FULL = "full"
     PARTIAL = "partial"
     INSUFFICIENT = "insufficient"
-
-
-class Citation(BaseModel):
-    """A citation linking answer text to a source chunk."""
-
-    chunk_id: str
-    document_id: str
-    excerpt: str
-    claim: str = ""
 
 
 class GuardResult(BaseModel):

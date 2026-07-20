@@ -154,7 +154,7 @@ src/adaptive_rag/
 | **4B** | ✅ | Query decomposition (conservative, sequential retrieval) |
 | **5A** | ✅ | Cross-encoder reranking (`RerankerPort`, post-merge, pre-confidence) |
 | **5B** | ✅ | Evidence-grounded answer generation (`AnswerGeneratorPort`, prompt templates) |
-| **5C** | 🔜 | Citation formatting and verification |
+| **5C** | ✅ | Citation formatting and evidence attribution (`CitationFormatterPort`) |
 | **6** | 🔜 | Hallucination guard, grounding validation |
 | **7** | 🔜 | RAGAS evaluation, LLM-as-Judge, observability |
 | **8** | 🔜 | Explainability dashboard, Docker deployment |
@@ -384,6 +384,61 @@ LLM__MODEL=llama3
 ```
 
 Eval adds an `answer_generation` suite measuring generation success, basic groundedness, latency, and token usage.
+
+---
+
+## Phase 5C — Citation Formatting & Evidence Attribution
+
+Citation formatting runs **after answer generation**, using the same reranked evidence and `used_chunk_ids` from the answer generator. The raw answer text is never modified during generation; structured citations and formatted views are attached by the formatter.
+
+```mermaid
+flowchart LR
+    Answer["GeneratedAnswer"] --> Formatter["EvidenceCitationFormatter"]
+    Evidence["Reranked ScoredChunks"] --> Formatter
+    Formatter --> Citations["Citation[]"]
+    Formatter --> Formats["CitationFormats"]
+```
+
+| Component | Location | Role |
+|---|---|---|
+| `CitationFormatterPort` | `domain/ports/citation_formatter.py` | Citation formatting contract |
+| `EvidenceCitationFormatter` | `domain/policies/evidence_citation_formatter.py` | Map evidence metadata to citations |
+| `Citation` | `domain/models/citation.py` | Structured evidence reference |
+| `CitationFormats` | `domain/models/citation.py` | Markdown, plain text, and JSON (`json_text`) renderings |
+| `GeneratedAnswer.citations` | `domain/models/answer.py` | Structured citations on the answer DTO |
+
+Each `Citation` includes:
+
+| Field | Source |
+|---|---|
+| `chunk_id` | `Chunk.id` |
+| `document_id` | `Chunk.document_id` |
+| `page_number` | `metadata.page_start` (fallback: `page_number`, `page_end`) |
+| `section_title` | `metadata.section_title` |
+| `confidence` | `ScoredChunk.score` when available |
+| `excerpt` | Truncated chunk content |
+
+Citations preserve **rerank order** via `used_chunk_ids` from `ContextBuilder`.
+
+Configuration:
+
+```bash
+CITATION__EXCERPT_MAX_CHARS=200
+```
+
+Eval adds a `citation` suite measuring citation coverage, precision, missing citation rate, and invalid citation rate.
+
+---
+
+## Production AI Models
+
+| Layer | Production | Tests (unit) | Config |
+|---|---|---|---|
+| Embedder | `SentenceTransformerEmbedder` | `FakeEmbedder` | `EMBEDDING_MODEL` / `EMBEDDING__MODEL_NAME` |
+| Reranker | `CrossEncoderReranker` | `FakeReranker` | `RERANKER_MODEL` / `RERANKER__MODEL_NAME` |
+| LLM | `OpenRouterProviderLLM` | `FakeLLM` | `OPENROUTER_API_KEY`, `OPENROUTER_MODEL` |
+
+Fake adapters activate only when `ADAPTIVE_RAG_FAKE_*=1`. Pytest unit tests set these automatically via `conftest.py`.
 
 ---
 

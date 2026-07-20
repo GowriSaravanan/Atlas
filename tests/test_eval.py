@@ -8,6 +8,7 @@ from pathlib import Path
 import pytest
 
 from eval.metrics.answer import evaluate_answer_case, summarize_answer
+from eval.metrics.citation import evaluate_citation_case, summarize_citation
 from eval.metrics.decomposition import evaluate_decomposition_case, summarize_decomposition
 from eval.metrics.latency import summarize_latency
 from eval.metrics.rerank import evaluate_rerank_case, summarize_rerank
@@ -47,6 +48,21 @@ def test_routing_accuracy_summary() -> None:
     ]
     summary = summarize_routing(cases)
     assert summary["router_accuracy"] == 0.5
+
+
+def test_citation_metrics() -> None:
+    case = evaluate_citation_case(
+        case_id="CT001",
+        used_chunk_ids=["c1", "c2"],
+        citation_chunk_ids=["c1", "c2"],
+        min_citations=1,
+    )
+    summary = summarize_citation([case])
+    assert case["coverage"] == 1.0
+    assert case["precision"] == 1.0
+    assert case["missing_citation_rate"] == 0.0
+    assert case["invalid_citation_rate"] == 0.0
+    assert summary["citation_coverage"] == 1.0
 
 
 def test_decomposition_false_decomposition_rate() -> None:
@@ -182,6 +198,7 @@ def test_dataset_files_exist() -> None:
         "confidence_dataset.jsonl",
         "failure_dataset.jsonl",
         "answer_generation_dataset.jsonl",
+        "citation_dataset.jsonl",
         "golden_demo.jsonl",
     ]
     for name in expected:

@@ -13,6 +13,21 @@ from adaptive_rag.api.schemas.query import HealthResponse, ReadinessResponse
 router = APIRouter(tags=["health"])
 
 
+def _llm_is_configured(settings) -> bool:
+    llm = settings.llm
+    if not llm.model:
+        return False
+    if llm.provider == "openrouter":
+        return bool(llm.openrouter_api_key)
+    if llm.provider == "openai":
+        return bool(llm.openai_api_key)
+    if llm.provider == "gemini":
+        return bool(llm.gemini_api_key)
+    if llm.provider == "groq":
+        return bool(llm.groq_api_key)
+    return True
+
+
 @router.get("/health", response_model=HealthResponse)
 def health_check(container: Container = Depends(get_container)) -> HealthResponse:
     """Return lightweight service health status."""
@@ -36,6 +51,6 @@ def readiness_check(container: Container = Depends(get_container)) -> ReadinessR
         "index_dir_writable": index_dir.exists() and os.access(index_dir, os.W_OK),
         "upload_dir_writable": upload_dir.exists() and os.access(upload_dir, os.W_OK),
         "embedder_initialized": container.embedder.dimension > 0,
-        "llm_configured": bool(settings.llm.model),
+        "llm_configured": _llm_is_configured(settings),
     }
     return ReadinessResponse(ready=all(checks.values()), checks=checks)

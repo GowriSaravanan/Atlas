@@ -68,5 +68,8 @@ def test_retrieval_engine_returns_generated_answer(sample_pdf) -> None:
     assert result.generated_answer is not None
     assert result.generated_answer.answer
     assert result.generated_answer.used_chunk_ids
+    assert result.generated_answer.citations
+    assert result.generated_answer.citation_formats is not None
     assert "sick leave" in result.generated_answer.answer.lower()
     assert any(step.step == "answer_generation" for step in result.trace.steps)
+    assert any(step.step == "citation_formatting" for step in result.trace.steps)

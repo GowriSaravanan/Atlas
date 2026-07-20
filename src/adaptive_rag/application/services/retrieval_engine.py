@@ -38,6 +38,7 @@ from adaptive_rag.domain.ports.query_decomposer import QueryDecomposerPort
 from adaptive_rag.domain.ports.query_rewriter import QueryRewriterPort
 from adaptive_rag.domain.ports.reranker import RerankerPort
 from adaptive_rag.domain.ports.answer_generator import AnswerGeneratorPort
+from adaptive_rag.domain.ports.citation_formatter import CitationFormatterPort
 from adaptive_rag.observability.logging import get_logger
 
 logger = get_logger(__name__)
@@ -63,6 +64,7 @@ class RetrievalEngine:
         result_merger: SubqueryResultMerger | None = None,
         reranker: RerankerPort | None = None,
         answer_generator: AnswerGeneratorPort | None = None,
+        citation_formatter: CitationFormatterPort | None = None,
     ) -> None:
         self._index_registry = index_registry
         self._hybrid_retriever = hybrid_retriever
@@ -79,6 +81,7 @@ class RetrievalEngine:
         self._result_merger = result_merger or SubqueryResultMerger(fusion_engine)
         self._reranker = reranker
         self._answer_generator = answer_generator
+        self._citation_formatter = citation_formatter
 
     def execute(
         self,
@@ -240,6 +243,24 @@ class RetrievalEngine:
                 )
             )
             trace.latency_ms["answer_generation_ms"] = answer_ms
+
+        citation_ms = 0.0
+        if self._citation_formatter is not None and generated_answer is not None:
+            start = time.perf_counter()
+            generated_answer = self._citation_formatter.format(generated_answer, merged_results)
+            citation_ms = (time.perf_counter() - start) * 1000
+            trace.steps.append(
+                StepTrace(
+                    step="citation_formatting",
+                    duration_ms=citation_ms,
+                    metadata={
+                        "citation_count": len(generated_answer.citations),
+                        "used_chunk_ids": generated_answer.used_chunk_ids,
+                        "formats": ["markdown", "plain_text", "json_text"],
+                    },
+                )
+            )
+            trace.latency_ms["citation_formatting_ms"] = citation_ms
 
         logger.info(
             "Retrieval engine completed",

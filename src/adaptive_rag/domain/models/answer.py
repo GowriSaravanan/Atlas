@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from pydantic import BaseModel, Field
 
+from adaptive_rag.domain.models.citation import Citation, CitationFormats
 from adaptive_rag.domain.models.retrieval import ScoredChunk
 
 
@@ -22,6 +23,8 @@ class GeneratedAnswer(BaseModel):
 
     answer: str
     used_chunk_ids: list[str] = Field(default_factory=list)
+    citations: list[Citation] = Field(default_factory=list)
+    citation_formats: CitationFormats | None = None
     model_name: str
     prompt_tokens: int = 0
     completion_tokens: int = 0

@@ -20,6 +20,7 @@ if str(ROOT) not in sys.path:
 from eval.fixtures.catalog import build_chunk_catalog
 from eval.fixtures.corpus import EVAL_COLLECTION_ID, build_eval_corpus_pdf
 from eval.metrics.answer import evaluate_answer_case, summarize_answer
+from eval.metrics.citation import evaluate_citation_case, summarize_citation
 from eval.metrics.confidence import evaluate_confidence_case, summarize_confidence
 from eval.metrics.decomposition import evaluate_decomposition_case, summarize_decomposition
 from eval.metrics.failure import evaluate_failure_case, summarize_failure
@@ -249,6 +250,29 @@ class EvaluationRunner:
             )
         return {"cases": cases, "summary": summarize_answer(cases)}
 
+    def run_citation_eval(self) -> dict[str, Any]:
+        cases = []
+        for row in load_jsonl(DATASETS_DIR / "citation_dataset.jsonl"):
+            top_k = row.get("top_k", 5)
+            result = self.container.hybrid_retrieval_use_case.execute(
+                query=row["query"],
+                collection_id=self.collection_id,
+                top_k=top_k,
+            )
+            self.latency_traces.append(trace_payload(result))
+            generated = result.generated_answer
+            citations = generated.citations if generated else []
+            used_chunk_ids = generated.used_chunk_ids if generated else []
+            cases.append(
+                evaluate_citation_case(
+                    case_id=row["id"],
+                    used_chunk_ids=used_chunk_ids,
+                    citation_chunk_ids=[citation.chunk_id for citation in citations],
+                    min_citations=row.get("min_citations", 1),
+                )
+            )
+        return {"cases": cases, "summary": summarize_citation(cases)}
+
     def run_confidence_eval(self) -> dict[str, Any]:
         cases = []
         for row in load_jsonl(DATASETS_DIR / "confidence_dataset.jsonl"):
@@ -355,6 +379,7 @@ class EvaluationRunner:
             "retrieval": self.run_retrieval_eval(),
             "rerank": self.run_rerank_eval(),
             "answer_generation": self.run_answer_generation_eval(),
+            "citation": self.run_citation_eval(),
             "confidence": self.run_confidence_eval(),
             "failure": self.run_failure_eval(),
             "golden_demo": self.run_golden_demo(),
@@ -434,6 +459,20 @@ def write_report(report: dict[str, Any], output_path: Path) -> None:
                 "",
             ]
         )
+    if "citation" in sections:
+        summary = sections["citation"]["summary"]
+        lines.extend(
+            [
+                "## Citation Formatting",
+                "",
+                f"- Citation coverage: {summary.get('citation_coverage')}",
+                f"- Citation precision: {summary.get('citation_precision')}",
+                f"- Missing citation rate: {summary.get('missing_citation_rate')}",
+                f"- Invalid citation rate: {summary.get('invalid_citation_rate')}",
+                f"- Order preserved rate: {summary.get('order_preserved_rate')}",
+                "",
+            ]
+        )
     if "rewrite" in sections:
         summary = sections["rewrite"]["summary"]
         lines.extend(
@@ -481,7 +520,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Run Adaptive Retrieval Platform evaluation benchmarks.")
     parser.add_argument(
         "--suite",
-        choices=["all", "rewrite", "routing", "decomposition", "retrieval", "rerank", "answer_generation", "confidence", "failure", "golden", "latency"],
+        choices=["all", "rewrite", "routing", "decomposition", "retrieval", "rerank", "answer_generation", "citation", "confidence", "failure", "golden", "latency"],
         default="all",
     )
     parser.add_argument(
@@ -510,6 +549,7 @@ def main() -> int:
             "retrieval": "run_retrieval_eval",
             "rerank": "run_rerank_eval",
             "answer_generation": "run_answer_generation_eval",
+            "citation": "run_citation_eval",
             "confidence": "run_confidence_eval",
             "failure": "run_failure_eval",
             "golden": "run_golden_demo",

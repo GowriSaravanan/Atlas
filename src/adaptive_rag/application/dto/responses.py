@@ -7,7 +7,7 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 from adaptive_rag.domain.models.confidence import ConfidenceScore
-from adaptive_rag.domain.models.grounding import Citation
+from adaptive_rag.domain.models.citation import Citation
 from adaptive_rag.domain.models.retrieval import RetrievalStrategy, SubquerySummary
 from adaptive_rag.domain.models.trace import RetrievalTrace
 

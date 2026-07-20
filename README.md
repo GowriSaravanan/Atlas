@@ -104,13 +104,63 @@ Query → Analyze → [Rewrite] → Decompose → Retrieve → Merge → Rerank
 - **`GeneratedAnswer`** — structured output with `used_chunk_ids`, token counts, and latency
 - Dedicated `answer_generation` eval suite (generation success, groundedness, latency, tokens)
 
+## Phase 5C — Citation Formatting & Evidence Attribution
+
+Structured citations are attached **after** answer generation without modifying the raw answer text.
+
+### Pipeline
+
+```
+… → AnswerGenerator → GeneratedAnswer → CitationFormatter → citations + formats
+```
+
+### Features
+
+- **`CitationFormatterPort`** with `EvidenceCitationFormatter` (domain policy)
+- **`Citation`** model — `chunk_id`, `document_id`, `page_number`, `section_title`, `confidence`, `excerpt`
+- **`CitationFormats`** — Markdown, plain text, and JSON renderings on `GeneratedAnswer`
+- Citations preserve rerank order via `used_chunk_ids`
+- Dedicated `citation` eval suite (coverage, precision, missing/invalid citation rate)
+
+## Production AI Models
+
+Production uses real adapters by default. Unit tests opt into fakes via pytest fixtures.
+
+| Component | Production adapter | Default model | Test toggle |
+|---|---|---|---|
+| Embedder | `SentenceTransformerEmbedder` | `BAAI/bge-base-en-v1.5` | `ADAPTIVE_RAG_FAKE_EMBEDDER=1` |
+| Reranker | `CrossEncoderReranker` | `BAAI/bge-reranker-base` | `ADAPTIVE_RAG_FAKE_RERANKER=1` |
+| LLM | `OpenRouterProviderLLM` | `OPENROUTER_MODEL` | `ADAPTIVE_RAG_FAKE_LLM=1` |
+
+```bash
+# .env
+EMBEDDING_MODEL=BAAI/bge-base-en-v1.5
+RERANKER_MODEL=BAAI/bge-reranker-base
+OPENROUTER_API_KEY=sk-or-...
+OPENROUTER_MODEL=meta-llama/llama-3.1-8b-instruct
+```
+
+```bash
+# Fast unit tests (fakes)
+uv run pytest -m "not integration"
+
+# Real-model integration tests
+uv run pytest -m integration
+
+# End-to-end production benchmark
+uv run python scripts/run_production_benchmark.py
+```
+
+See [docs/production-models-report.md](docs/production-models-report.md) for benchmark output.
+
 ### Version roadmap
 
 | Tag | Milestone |
 |---|---|
 | `v1.0.0-adaptive-retrieval` | Retrieval v1.0 freeze — routing, rewrite, decomposition, hybrid retrieval, eval baseline |
 | `v1.2.0-answer-generation` | Phase 5A reranking + Phase 5B answer generation |
-| *upcoming* | Phase 5C — citation formatting and evidence attribution |
+| `v1.2.1-production-hardening` | Security, error handling, readiness, config wiring |
+| *upcoming* | Phase 5C — citation formatting (`v1.3.0-citation-formatting`) |
 
 ## Evaluation Framework
 
@@ -121,7 +171,7 @@ uv run python eval/run_eval.py
 uv run python eval/run_eval.py --suite golden
 ```
 
-Stage-specific datasets cover rewrite, routing, decomposition, retrieval, rerank, answer generation, confidence, failure cases, and a golden demo for interviews.
+Stage-specific datasets cover rewrite, routing, decomposition, retrieval, rerank, answer generation, citation formatting, confidence, failure cases, and a golden demo for interviews.
 
 ### Architecture (v1.2)
 

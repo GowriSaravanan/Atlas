@@ -17,6 +17,7 @@ from adaptive_rag.application.workflow.query_graph import compile_query_graph
 from adaptive_rag.config.mappers import (
     resolve_prompts_dir,
     to_answer_generation_policy_config,
+    to_citation_formatter_policy_config,
     to_chunking_policy_config,
     to_confidence_weight_config,
     to_fusion_policy_config,
@@ -31,6 +32,7 @@ from adaptive_rag.domain.ports.embedder import EmbedderPort
 
 if TYPE_CHECKING:
     from adaptive_rag.domain.ports.answer_generator import AnswerGeneratorPort
+    from adaptive_rag.domain.ports.citation_formatter import CitationFormatterPort
     from adaptive_rag.domain.ports.index_registry import IndexRegistryPort
     from adaptive_rag.domain.ports.llm import LLMPort
     from adaptive_rag.domain.ports.reranker import RerankerPort
@@ -58,6 +60,7 @@ class Container:
     _reranker: RerankerPort | None = field(default=None, repr=False)
     _llm: LLMPort | None = field(default=None, repr=False)
     _answer_generator: AnswerGeneratorPort | None = field(default=None, repr=False)
+    _citation_formatter: CitationFormatterPort | None = field(default=None, repr=False)
     _fusion_engine: object | None = field(default=None, repr=False)
     _confidence_scorer: ConfidenceScorer | None = field(default=None, repr=False)
     _index_registry: IndexRegistryPort | None = field(default=None, repr=False)
@@ -146,6 +149,18 @@ class Container:
                     prompt_builder=prompt_builder,
                 )
         return self._answer_generator
+
+    @property
+    def citation_formatter(self) -> CitationFormatterPort:
+        if self._citation_formatter is None:
+            from adaptive_rag.domain.policies.evidence_citation_formatter import (
+                EvidenceCitationFormatter,
+            )
+
+            self._citation_formatter = EvidenceCitationFormatter(
+                to_citation_formatter_policy_config(self.settings.citation)
+            )
+        return self._citation_formatter
 
     @property
     def index_registry(self) -> IndexRegistryPort:
@@ -243,6 +258,7 @@ class Container:
                 confidence_scorer=self.confidence_scorer,
                 reranker=self.reranker,
                 answer_generator=self.answer_generator,
+                citation_formatter=self.citation_formatter,
             )
         return self._retrieval_engine
 
